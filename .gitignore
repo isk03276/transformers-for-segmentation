@@ -133,3 +133,6 @@ data/
 
 # checkpoints
 checkpoints/
+
+# vscode
+.vscode/
