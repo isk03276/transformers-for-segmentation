@@ -1,7 +1,8 @@
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import torchvision
-import torchvision.transforms as transforms
+
+from dataset.btcv_dataset import BTCVDataset
 
 
 class DatasetGetter:
@@ -12,21 +13,9 @@ class DatasetGetter:
         elif dataset_name == "cifar100":
             return torchvision.datasets.CIFAR100
         elif dataset_name == "btcv":
-            pass
+            return BTCVDataset
         else:
             raise NotImplementedError
-
-    @staticmethod
-    def get_transform(normalize: bool = True, resize_shape: tuple = None):
-        transform_compose_list = [transforms.ToTensor()]
-        if normalize:
-            transform_compose_list.append(
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            )
-        if resize_shape:
-            transform_compose_list.append(transforms.Resize(resize_shape))
-        transform = transforms.Compose(transform_compose_list)
-        return transform
 
     @staticmethod
     def get_dataset(
@@ -37,8 +26,6 @@ class DatasetGetter:
         transform=None,
     ) -> Dataset:
         dataset_cls = DatasetGetter.get_dataset_cls(dataset_name=dataset_name)
-        if transform is None:
-            transform = DatasetGetter.get_transform()
         dataset = dataset_cls(
             root=path, train=is_train, download=download, transform=transform
         )
