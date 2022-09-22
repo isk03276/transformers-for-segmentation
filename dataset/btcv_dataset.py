@@ -6,7 +6,7 @@ from utils.image import load_from_nii, channel_padding
 
 
 class BTCVDataset(BaseDataset):
-    def __init__(self, root: str, transform, max_slices: int = 50, *args, **kwargs):
+    def __init__(self, root: str, transform, max_slices: int = 96, *args, **kwargs):
         super().__init__(root=root, transform=transform, *args, **kwargs)
         self.max_slices = max_slices
         
