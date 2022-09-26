@@ -1,25 +1,55 @@
+from turtle import pos
 import torch
 import torch.nn as nn
 
+from utils.image import slice_image_to_patches
+
 
 class BasePatchEmbedder(nn.Module):
-    def __init__(self, image_size: int, n_channel: int, n_patch: int, n_dim: int, use_cnn_embedding):
+    def __init__(
+        self,
+        image_size: int,
+        n_channel: int,
+        n_patch: int,
+        n_dim: int,
+        use_cnn_embedding: bool,
+        is_3d_data: bool,
+    ):
         super().__init__()
         self.image_size = image_size
         self.n_channel = n_channel
         self.n_patch = n_patch
         self.n_dim = n_dim
         self.use_cnn_embedding = use_cnn_embedding
+        self.is_3d_data = is_3d_data
         
         if self.use_cnn_embedding:
-            self.projection = nn.Conv2d(in_channels=n_channel, out_channels=n_dim, kernel_size=n_patch, stride=n_patch)
+            self.projection = nn.Conv2d(
+                in_channels=n_channel,
+                out_channels=n_dim,
+                kernel_size=n_patch,
+                stride=n_patch,
+            )
         else:
-            self.projection = nn.Linear(n_channel * n_patch**2, n_dim)
-        self.class_token = nn.Parameter(torch.randn(1, 1, self.n_dim))
-        self.position_embedding = nn.Parameter(
-            torch.randn((self.image_size // self.n_patch) ** 2 + 1, self.n_dim)
-        )
+            self.projection = self.define_ffn_projection()
+        self.position_embedding = self.define_position_embedding()
         
+    def define_ffn_projection(self) -> nn.Linear:
+        input_dim = None
+        if self.is_3d_data:
+            input_dim = self.n_patch**3
+        else:
+            input_dim = self.n_channel * self.n_patch**2
+        return nn.Linear(input_dim, self.n_dim)
+    
+    def define_position_embedding(self) -> torch.Tensor:
+        if self.is_3d_data:
+            input_dim = (self.image_size // self.n_patch) ** 3
+        else:
+            input_dim = (self.image_size // self.n_patch) ** 2
+        position_embedding = nn.Parameter(torch.randn(input_dim, self.n_dim))
+        return position_embedding
+
     def forward(self, x):
         batch_size = x.size(0)
         if self.use_cnn_embedding:
@@ -27,13 +57,18 @@ class BasePatchEmbedder(nn.Module):
         else:
             embs = self.ffn_patch_projection(x)
         # (1, 1, dim) -> (B, 1, dim )
-        class_token = self.class_token.repeat(batch_size, 1, 1)
-        embs = torch.cat((embs, class_token), dim=1)
         embs += self.position_embedding
-        return embs 
-        
+        return embs
+
     def ffn_patch_projection(self, x):
-        raise NotImplementedError
-    
+        patches = slice_image_to_patches(
+            images=x, patch_size=self.n_patch, flatten=True, is_3d_data=self.is_3d_data
+        )
+        embs = self.projection(patches)
+        return embs
+
     def cnn_patch_projection(self, x):
-        raise NotImplementedError
+        embs = self.projection(x)
+        embs = embs.flatten()
+        embs = embs.transpose(-1, -2)
+        return embs

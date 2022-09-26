@@ -12,4 +12,3 @@ class MLPBlock(nn.Module):
         x = self.activation(self.linear1(x))
         x = self.activation(self.linear2(x))
         return x
-    

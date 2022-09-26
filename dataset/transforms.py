@@ -13,6 +13,7 @@ def get_common_transform(normalize: bool = True, resize_shape: tuple = None):
     transform = transforms.Compose(transform_compose_list)
     return transform
 
+
 def get_btcv_transform():
     transform_compose_list = []
     # transform_compose_list.append(

@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 class TensorboardLogger:
     def __init__(self, log_dir: str):
         self.writer = SummaryWriter(log_dir=log_dir)
-        
+
     def add_model_graph(self, model, image):
         self.writer.add_graph(model, image)
 

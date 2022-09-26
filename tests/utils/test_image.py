@@ -15,8 +15,12 @@ class TestImage(unittest.TestCase):
         images_2d = torch.zeros((10, 3, 200, 200))
         images_3d = torch.zeros((10, 200, 200, 200))
         patch_size = 2
-        patches_2d = slice_image_to_patches(images_2d, patch_size, flatten=True, is_3d_data=False)
-        patches_3d = slice_image_to_patches(images_3d, patch_size, flatten=True, is_3d_data=True)
+        patches_2d = slice_image_to_patches(
+            images_2d, patch_size, flatten=True, is_3d_data=False
+        )
+        patches_3d = slice_image_to_patches(
+            images_3d, patch_size, flatten=True, is_3d_data=True
+        )
         assert patches_2d.shape == (10, 10000, 3 * patch_size * patch_size)
         assert patches_3d.shape == (10, 1000000, patch_size**3)
 

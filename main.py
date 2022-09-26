@@ -11,6 +11,7 @@ from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
 from transformers_for_segmentation.unetr.model import UnetR
+from transformers_for_segmentation.unetr.learner import Learner
 
 
 def get_current_time() -> str:
@@ -29,7 +30,10 @@ def run(args):
 
     # Getting Dataset
     dataset = DatasetGetter.get_dataset(
-        dataset_name=args.dataset_name, path=args.dataset_path, is_train=not args.test, transform=None
+        dataset_name=args.dataset_name,
+        path=args.dataset_path,
+        is_train=not args.test,
+        transform=None,
     )
     dataset_loader = DatasetGetter.get_dataset_loader(
         dataset=dataset, batch_size=1 if args.test else args.batch_size
@@ -57,46 +61,48 @@ def run(args):
         n_heads=args.heads_num,
         use_cnn_embedding=args.use_cnn_embedding,
     ).to(device)
-    
+
     if args.load_from is not None:
         load_model(model, args.load_from)
 
     # Train / Test Iteration
-    # learner = ViTLearner(model=model)
-    # epoch = 1 if args.test else args.epoch
+    learner = Learner(model=model)
+    epoch = 1 if args.test else args.epoch
 
-    # if not args.test:
-    #     model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
-    #     logger = TensorboardLogger(model_save_dir)
-    #     logger.add_model_graph(model=model, image=sampled_data)
-    #     save_yaml(vars(args), model_save_dir + "config.yaml")
+    if not args.test:
+        model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
+        logger = TensorboardLogger(model_save_dir)
+        logger.add_model_graph(model=model, image=sampled_data)
+        save_yaml(vars(args), model_save_dir + "config.yaml")
 
-    # for epoch in range(epoch):
-    #     loss_list, acc_list = [], []
-    #     for images, labels in dataset_loader:
-    #         images = images.to(device)
-    #         labels = labels.to(device)
-    #         loss, acc = learner.step(
-    #             images=images, labels=labels, is_train=not args.test
-    #         )
-    #         loss_list.append(loss)
-    #         acc_list.append(acc)
-    #     loss_avg, acc_avg = np.mean(loss_list), np.mean(acc_list)
-    #     if not args.test:
-    #         # Save model
-    #         if (epoch + 1) % args.save_interval == 0:
-    #             save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
-    #         # Log
-    #         logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
-    #         logger.log(tag="Training/Accuracy", value=acc_avg, step=epoch + 1)
+    for epoch in range(epoch):
+        loss_list, acc_list = [], []
+        for images, labels in dataset_loader:
+            images = images.to(device)
+            labels = labels.to(device)
+            loss, acc = learner.step(
+                images=images, labels=labels, is_train=not args.test
+            )
+            loss_list.append(loss)
+            acc_list.append(acc)
+        loss_avg, acc_avg = np.mean(loss_list), np.mean(acc_list)
+        if not args.test:
+            # Save model
+            if (epoch + 1) % args.save_interval == 0:
+                save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
+            # Log
+            logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
+            logger.log(tag="Training/Accuracy", value=acc_avg, step=epoch + 1)
 
-    #     print("[Epoch {}] Loss : {} | Accuracy : {}".format(epoch, loss_avg, acc_avg))
-        
-    # logger.close()
+        print("[Epoch {}] Loss : {} | Accuracy : {}".format(epoch, loss_avg, acc_avg))
+
+    logger.close()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Transformer based Networks for Image Segmentation")
+    parser = argparse.ArgumentParser(
+        description="Transformer based Networks for Image Segmentation"
+    )
     # dataset
     parser.add_argument(
         "--device",
@@ -123,7 +129,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--heads-num", type=int, default=12, help="Number of attention heads"
     )
-    parser.add_argument("--use-cnn-embedding", action="store_true", help="Whether to use cnn based patch embedding")
+    parser.add_argument(
+        "--use-cnn-embedding",
+        action="store_true",
+        help="Whether to use cnn based patch embedding",
+    )
     # train / test
     parser.add_argument("--epoch", type=int, default=200, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
