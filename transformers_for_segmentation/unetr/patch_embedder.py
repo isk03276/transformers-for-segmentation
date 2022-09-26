@@ -1,11 +1,11 @@
 import torch 
 import torch.nn as nn
 
-from models.patch_embedders.base_patch_embedder import BaseEmbedder
+from transformers_for_segmentation.base.patch_embedder import BasePatchEmbedder
 from utils.image import slice_image_to_patches
 
 
-class ViTPatchEmbedder(BaseEmbedder):
+class PatchEmbedder(BasePatchEmbedder):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -13,7 +13,7 @@ class ViTPatchEmbedder(BaseEmbedder):
         batch_size = x.size(0)
         # (B, C, H, W) -> (B, N, C  * P * P)
         patches = slice_image_to_patches(
-            images=x, patch_size=self.n_patch, flatten=True, is_3d_data=False
+            images=x, patch_size=self.n_patch, flatten=True, is_3d_data=True
         )
         embs = self.projection(patches)
         # (1, 1, dim) -> (B, 1, dim )

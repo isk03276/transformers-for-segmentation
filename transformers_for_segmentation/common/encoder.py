@@ -1,9 +1,7 @@
-from ast import Mult
-from unittest.mock import patch
-import torch
 import torch.nn as nn
 
-from transformers_for_segementation.common.layers import MultiHeadAttention, MLPBlock
+from transformers_for_segmentation.common.layers import MLPBlock
+from transformers_for_segmentation.common.attention import MultiHeadAttention
 
 
 class EncoderBlock(nn.Module):

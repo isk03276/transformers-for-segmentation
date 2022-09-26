@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-class BaseEmbedder(nn.Module):
+
+class BasePatchEmbedder(nn.Module):
     def __init__(self, image_size: int, n_channel: int, n_patch: int, n_dim: int, use_cnn_embedding):
         super().__init__()
         self.image_size = image_size

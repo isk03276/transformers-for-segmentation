@@ -10,7 +10,7 @@ from dataset.transforms import get_btcv_transform
 from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
-from models.unetr import UnetR
+from transformers_for_segmentation.unetr.model import UnetR
 
 
 def get_current_time() -> str:

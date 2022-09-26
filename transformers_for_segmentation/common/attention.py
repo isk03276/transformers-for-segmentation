@@ -2,28 +2,6 @@ import torch
 import torch.nn as nn
 
 
-class MLPBlock(nn.Module):
-    def __init__(self, n_dim: int):
-        super().__init__()
-        self.linear1 = nn.Linear(n_dim, n_dim)
-        self.linear2 = nn.Linear(n_dim, n_dim)
-        self.activation = nn.GELU()
-
-    def forward(self, x):
-        x = self.activation(self.linear1(x))
-        x = self.activation(self.linear2(x))
-        return x
-    
-
-class Classifier(nn.Module):
-    def __init__(self, n_dim: int, n_classes: int):
-        super().__init__()
-        self.linear = nn.Linear(n_dim, n_classes)
-
-    def forward(self, x):
-        return self.linear(x)
-
-
 class MultiHeadAttention(nn.Module):
     def __init__(self, n_dim: int, n_heads: int):
         super().__init__()
