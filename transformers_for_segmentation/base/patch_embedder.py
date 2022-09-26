@@ -22,7 +22,7 @@ class BasePatchEmbedder(nn.Module):
         self.n_dim = n_dim
         self.use_cnn_embedding = use_cnn_embedding
         self.is_3d_data = is_3d_data
-        
+
         if self.use_cnn_embedding:
             self.projection = nn.Conv2d(
                 in_channels=n_channel,
@@ -33,7 +33,7 @@ class BasePatchEmbedder(nn.Module):
         else:
             self.projection = self.define_ffn_projection()
         self.position_embedding = self.define_position_embedding()
-        
+
     def define_ffn_projection(self) -> nn.Linear:
         input_dim = None
         if self.is_3d_data:
@@ -41,7 +41,7 @@ class BasePatchEmbedder(nn.Module):
         else:
             input_dim = self.n_channel * self.n_patch**2
         return nn.Linear(input_dim, self.n_dim)
-    
+
     def define_position_embedding(self) -> torch.Tensor:
         if self.is_3d_data:
             input_dim = (self.image_size // self.n_patch) ** 3
