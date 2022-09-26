@@ -136,3 +136,6 @@ checkpoints/
 
 # vscode
 .vscode/
+
+# Mac
+.DS_Store
