@@ -10,7 +10,7 @@ def pad_image(image: Union[np.ndarray, torch.Tensor]):
 
 
 def slice_image_to_patches(
-    images: torch.Tensor, patch_size: int, flatten: bool = True, is_3d_data: bool = True,
+    images: torch.Tensor, patch_size: int, flatten: bool = True, is_3d_data: bool = False,
 ) -> torch.Tensor:
     """
     Split images into patches.

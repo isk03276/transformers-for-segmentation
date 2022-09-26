@@ -11,11 +11,12 @@ class BaseModel(nn.Module):
                  n_heads: int,
                  use_cnn_embedding: bool,):
         super().__init__()
+        print(n_encoder_blocks)
         self.image_size = image_size
         self.n_channel = n_channel
         self.n_patch = n_patch
         self.n_dim = n_dim
-        self.n_encoder_blacks = n_encoder_blocks
+        self.n_encoder_blocks = n_encoder_blocks
         self.n_heads = n_heads
         self.use_cnn_embedding = use_cnn_embedding
         

@@ -3,8 +3,7 @@ from unittest.mock import patch
 import torch
 import torch.nn as nn
 
-from models.common.layers import MultiHeadAttention, MLPBlock
-from utils.image import slice_image_to_patches
+from transformers_for_segementation.common.layers import MultiHeadAttention, MLPBlock
 
 
 class EncoderBlock(nn.Module):
