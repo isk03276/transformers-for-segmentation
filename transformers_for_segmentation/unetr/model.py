@@ -46,9 +46,14 @@ class UnetR(BaseModel):
             n_dim=self.n_dim,
             use_cnn_embedding=self.use_cnn_embedding,
         )
-        
+
         self.encoders = nn.ModuleList()
-        self.encoders.extend([EncoderBlock(n_dim=self.n_dim, n_heads=self.n_heads) for _ in range(self.n_encoder_blocks)])
+        self.encoders.extend(
+            [
+                EncoderBlock(n_dim=self.n_dim, n_heads=self.n_heads)
+                for _ in range(self.n_encoder_blocks)
+            ]
+        )
 
         self.decoder_0 = nn.Sequential(
             Conv3DBlock(in_channels=self.n_channel, out_channels=64),
@@ -108,7 +113,7 @@ class UnetR(BaseModel):
         for encoder_block in self.encoders:
             x = encoder_block(x)
             embs.append(self.embedding_to_image(x))
-            
+
         # decoding
         z3, z6, z9, z12 = embs[2::3]
         x = self.decoder_12(z12)
@@ -124,7 +129,7 @@ class UnetR(BaseModel):
         x = torch.cat([x, self.decoder_0(z0)], dim=1)
         x = self.decoder_0_merge(x)
         x = self.decoder_output(x)
-        
+
         return x
 
     def embedding_to_image(self, x):

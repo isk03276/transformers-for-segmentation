@@ -13,7 +13,7 @@ class BTCVDataset(BaseDataset):
     def get_image(self, image_file_name: str):
         image, _ = load_from_nii(image_file_name)
         image = self.image_prepocess(image)
-        image = image.unsqueeze(dim=0) # for adding image channel
+        image = image.unsqueeze(dim=0)  # for adding image channel
         return image
 
     def get_label(self, label_file_name: str):

@@ -51,7 +51,7 @@ def run(args):
         args.encoder_blocks_num = config["encoder_blocks_num"]
         args.heads_num = config["heads_num"]
         args.classes_num = config["classes_num"]
-        
+
     model = UnetR(
         image_size=image_size,
         n_channel=n_channel,
@@ -74,7 +74,6 @@ def run(args):
     if not args.test:
         model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
         logger = TensorboardLogger(model_save_dir)
-        # logger.add_model_graph(model=model, image=sampled_data)
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
@@ -82,9 +81,7 @@ def run(args):
         for images, labels in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
-            loss = learner.step(
-                images=images, labels=labels, is_train=not args.test
-            )
+            loss = learner.step(images=images, labels=labels, is_train=not args.test)
             loss_list.append(loss)
         loss_avg = np.mean(loss_list)
         if not args.test:
@@ -94,7 +91,7 @@ def run(args):
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
 
-        print("[Epoch {}] Loss : {} | Accuracy : {}".format(epoch, loss_avg))
+        print("[Epoch {}] Loss : {}".format(epoch, loss_avg))
 
     logger.close()
 
