@@ -1,12 +1,11 @@
 import os
 import argparse
-
 import datetime
 
 import numpy as np
+import torch
 
 from dataset.dataset_getter import DatasetGetter
-from dataset.transforms import get_btcv_transform
 from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
@@ -38,8 +37,9 @@ def run(args):
     dataset_loader = DatasetGetter.get_dataset_loader(
         dataset=dataset, batch_size=1 if args.test else args.batch_size
     )
-    sampled_data = next(iter(dataset_loader))[0].to(device)
-    n_channel, image_size = sampled_data.size()[1:3]
+    with torch.no_grad():
+        sampled_data = next(iter(dataset_loader))[0]
+    n_channel, n_seq, image_size = sampled_data.size()[1:4]
 
     # Model Instantiation
     if args.load_from and args.load_model_config:
@@ -51,10 +51,11 @@ def run(args):
         args.encoder_blocks_num = config["encoder_blocks_num"]
         args.heads_num = config["heads_num"]
         args.classes_num = config["classes_num"]
-
+        
     model = UnetR(
         image_size=image_size,
         n_channel=n_channel,
+        n_seq=n_seq,
         n_patch=args.patch_size,
         n_dim=args.embedding_size,
         n_encoder_blocks=args.encoder_blocks_num,
@@ -72,7 +73,7 @@ def run(args):
     if not args.test:
         model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
         logger = TensorboardLogger(model_save_dir)
-        logger.add_model_graph(model=model, image=sampled_data)
+        # logger.add_model_graph(model=model, image=sampled_data)
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
