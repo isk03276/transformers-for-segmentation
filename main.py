@@ -77,21 +77,24 @@ def run(args):
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
-        loss_list = []
+        loss_list, iou_list = [], []
         for images, labels in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
-            loss = learner.step(images=images, labels=labels, is_train=not args.test)
-            loss_list.append(loss)
+            learning_info = learner.step(images=images, labels=labels, is_train=not args.test)
+            loss_list.append(learning_info["loss"])
+            iou_list.append(learning_info["iou"])
         loss_avg = np.mean(loss_list)
+        iou_avg = np.mean(iou_list)
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
+            logger.log(tag="Traning/IOU", value=iou_avg, step=epoch+1)
 
-        print("[Epoch {}] Loss : {}".format(epoch, loss_avg))
+        print("[Epoch {}] Loss : {} | IOU : {}".format(epoch, loss_avg, iou_avg))
 
     logger.close()
 
