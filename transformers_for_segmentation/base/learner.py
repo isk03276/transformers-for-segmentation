@@ -19,7 +19,6 @@ class BaseLearner:
         self, images: torch.Tensor, labels: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         preds = self.model(images)
-        print(preds.shape)
         loss = self.loss_func(preds, labels)
         return loss
 
