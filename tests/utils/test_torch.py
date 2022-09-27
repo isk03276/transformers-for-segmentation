@@ -5,11 +5,11 @@ import unittest
 import torch
 
 try:
-    from models.common.layers import MLPBlock
+    from transformers_for_segmentation.common.layers import MLPBlock
     from utils.torch import save_model, load_model
 except ModuleNotFoundError:
     sys.path.append(".")
-    from models.common.layers import MLPBlock
+    from transformers_for_segmentation.common.layers import MLPBlock
     from utils.torch import save_model, load_model
 
 

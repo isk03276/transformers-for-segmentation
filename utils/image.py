@@ -20,10 +20,6 @@ def slice_image_to_patches(
     Assume that images have shape of (N * C * H * W) or (N * C * D * H * W).
     """
     assert isinstance(images, torch.Tensor)
-    if is_3d_data:
-        assert len(images.shape) == 5
-    else:
-        assert len(images.shape) == 4
 
     images_shape = images.shape
     n_channel = images_shape[1]
