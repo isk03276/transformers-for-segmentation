@@ -17,21 +17,25 @@ def slice_image_to_patches(
 ) -> torch.Tensor:
     """
     Split images into patches.
-    Assume that images have shape of (N * C * H * W).
+    Assume that images have shape of (N * C * H * W) or (N * C * D * H * W).
     """
     assert isinstance(images, torch.Tensor)
-    assert len(images.shape) == 4
+    if is_3d_data:
+        assert len(images.shape) == 5
+    else:
+        assert len(images.shape) == 4
 
     images_shape = images.shape
-    n_batch, n_channel = images_shape[:2]
+    n_channel = images_shape[1]
     if is_3d_data:
         patches = (
-            images.unfold(1, patch_size, patch_size)
+            images.unfold(1, n_channel, n_channel)
             .unfold(2, patch_size, patch_size)
             .unfold(3, patch_size, patch_size)
+            .unfold(4, patch_size, patch_size)
         )
         if flatten:
-            patches = patches.flatten(start_dim=1, end_dim=3)
+            patches = patches.flatten(start_dim=1, end_dim=4)
             patches = patches.flatten(start_dim=2)
     else:
         patches = (
