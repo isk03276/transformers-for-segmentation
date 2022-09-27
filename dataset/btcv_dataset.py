@@ -13,11 +13,13 @@ class BTCVDataset(BaseDataset):
     def get_image(self, image_file_name: str):
         image, _ = load_from_nii(image_file_name)
         image = self.image_prepocess(image)
+        image = image.unsqueeze(dim=0) # for adding image channel
         return image
 
     def get_label(self, label_file_name: str):
         label, _ = load_from_nii(label_file_name)
         label = self.image_prepocess(label)
+        label = label.to(dtype=torch.int64)
         return label
 
     def image_prepocess(self, image):
@@ -25,5 +27,4 @@ class BTCVDataset(BaseDataset):
         image = np.resize(image, (n_seq, 96, 96))
         image = channel_padding(image, self.max_seq - n_seq, channel_axis=0)
         image = torch.Tensor(image)
-        image = image.unsqueeze(dim=0) # for adding image channel
         return image

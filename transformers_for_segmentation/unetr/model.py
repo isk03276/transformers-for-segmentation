@@ -22,6 +22,7 @@ class UnetR(BaseModel):
         n_dim: int,
         n_heads: int,
         use_cnn_embedding: bool,
+        n_classes: int,
         n_encoder_blocks: int = 12,
     ):
         super().__init__(
@@ -32,6 +33,7 @@ class UnetR(BaseModel):
             n_dim=n_dim,
             n_encoder_blocks=n_encoder_blocks,
             n_heads=n_heads,
+            n_classes=n_classes,
             use_cnn_embedding=use_cnn_embedding,
         )
 
@@ -57,7 +59,7 @@ class UnetR(BaseModel):
             Conv3DBlock(in_channels=64, out_channels=64),
         )
         self.decoder_output = Conv3dLayer(
-            in_channels=64, out_channels=self.n_channel, kernel_size=1
+            in_channels=64, out_channels=self.n_classes, kernel_size=1
         )
 
         self.decoder_3 = nn.Sequential(

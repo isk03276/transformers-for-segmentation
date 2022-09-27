@@ -11,6 +11,7 @@ class BaseModel(nn.Module):
         n_dim: int,
         n_encoder_blocks: int,
         n_heads: int,
+        n_classes: int,
         use_cnn_embedding: bool,
     ):
         super().__init__()
@@ -21,4 +22,5 @@ class BaseModel(nn.Module):
         self.n_dim = n_dim
         self.n_encoder_blocks = n_encoder_blocks
         self.n_heads = n_heads
+        self.n_classes = n_classes
         self.use_cnn_embedding = use_cnn_embedding

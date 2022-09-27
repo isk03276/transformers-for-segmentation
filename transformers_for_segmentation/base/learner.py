@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from transformers_for_segmentation.base.model import BaseModel
@@ -9,7 +10,7 @@ from transformers_for_segmentation.base.model import BaseModel
 class BaseLearner:
     def __init__(self, model: BaseModel, lr: float = 3e-4):
         self.model = model
-        self.loss_func = self.define_loss_func()
+        self.loss_func = nn.CrossEntropyLoss() #self.define_loss_func()
         self.optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     def define_loss_func(self):
@@ -17,7 +18,7 @@ class BaseLearner:
 
     def estimate_loss(
         self, images: torch.Tensor, labels: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> torch.Tensor:
         preds = self.model(images)
         loss = self.loss_func(preds, labels)
         return loss

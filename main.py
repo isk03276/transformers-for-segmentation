@@ -61,6 +61,7 @@ def run(args):
         n_encoder_blocks=args.encoder_blocks_num,
         n_heads=args.heads_num,
         use_cnn_embedding=args.use_cnn_embedding,
+        n_classes=args.num_classes,
     ).to(device)
 
     if args.load_from is not None:
@@ -77,25 +78,23 @@ def run(args):
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
-        loss_list, acc_list = [], []
+        loss_list = []
         for images, labels in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
-            loss, acc = learner.step(
+            loss = learner.step(
                 images=images, labels=labels, is_train=not args.test
             )
             loss_list.append(loss)
-            acc_list.append(acc)
-        loss_avg, acc_avg = np.mean(loss_list), np.mean(acc_list)
+        loss_avg = np.mean(loss_list)
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
-            logger.log(tag="Training/Accuracy", value=acc_avg, step=epoch + 1)
 
-        print("[Epoch {}] Loss : {} | Accuracy : {}".format(epoch, loss_avg, acc_avg))
+        print("[Epoch {}] Loss : {} | Accuracy : {}".format(epoch, loss_avg))
 
     logger.close()
 
@@ -116,6 +115,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dataset-path", type=str, default="data/btcv", help="Dataset path"
+    )
+    parser.add_argument(
+        "--num-classes", type=int, default=14, help="Number of the classes"
     )
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
