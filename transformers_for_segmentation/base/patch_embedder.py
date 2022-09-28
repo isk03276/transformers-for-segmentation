@@ -25,12 +25,11 @@ class BasePatchEmbedder(nn.Module):
         self.is_3d_data = is_3d_data
 
         if self.use_cnn_embedding:
-            self.projection = nn.Conv2d(
-                in_channels=n_channel,
-                out_channels=n_dim,
-                kernel_size=n_patch,
-                stride=n_patch,
-            )
+            conv_args = dict(in_channels=n_channel, out_channels=n_dim, kernel_size=n_patch, stride=n_patch)
+            if self.is_3d_data:
+                self.projection = nn.Conv3d(**conv_args)
+            else:
+                self.projection = nn.Conv2d(**conv_args)
         else:
             self.projection = self.define_ffn_projection()
         self.position_embedding = self.define_position_embedding()
@@ -70,6 +69,6 @@ class BasePatchEmbedder(nn.Module):
 
     def cnn_patch_projection(self, x):
         embs = self.projection(x)
-        embs = embs.flatten()
+        embs = embs.flatten(start_dim=2)
         embs = embs.transpose(-1, -2)
         return embs
