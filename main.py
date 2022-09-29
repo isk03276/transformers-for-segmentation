@@ -68,7 +68,7 @@ def run(args):
         load_model(model, args.load_from)
 
     # Train / Test Iteration
-    learner = Learner(model=model)
+    learner = Learner(model=model, n_classes=args.num_classes)
     epoch = 1 if args.test else args.epoch
 
     if not args.test:
@@ -78,10 +78,12 @@ def run(args):
 
     for epoch in range(epoch):
         loss_list, iou_list = [], []
-        for images, labels in dataset_loader:
+        for images, labels, mask in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
-            learning_info = learner.step(images=images, labels=labels, is_train=not args.test)
+            learning_info = learner.step(
+                images=images, labels=labels, mask=mask, is_train=not args.test
+            )
             loss_list.append(learning_info["loss"])
             iou_list.append(learning_info["iou"])
         loss_avg = np.mean(loss_list)
@@ -92,7 +94,7 @@ def run(args):
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
-            logger.log(tag="Traning/IOU", value=iou_avg, step=epoch+1)
+            logger.log(tag="Traning/IOU", value=iou_avg, step=epoch + 1)
 
         print("[Epoch {}] Loss : {} | IOU : {}".format(epoch, loss_avg, iou_avg))
 

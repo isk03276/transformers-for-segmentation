@@ -92,9 +92,7 @@ class Deconv3dBlock(nn.Module):
             in_channels=in_channels, out_channels=out_channels, kernel_size=2
         )
         self.conv_block = Conv3DBlock(
-            in_channels=out_channels,
-            out_channels=out_channels,
-            padding=1,
+            in_channels=out_channels, out_channels=out_channels, padding=1,
         )
 
     def forward(self, x):

@@ -22,7 +22,7 @@ class TestImage(unittest.TestCase):
             images_3d, patch_size, flatten=True, is_3d_data=True
         )
         assert patches_2d.shape == (10, 10000, 3 * patch_size * patch_size)
-        assert patches_3d.shape == (10, 1000000, patch_size**3)
+        assert patches_3d.shape == (10, 1000000, patch_size ** 3)
 
 
 if __name__ == "__main__":
