@@ -64,3 +64,12 @@ def channel_padding(image: np.ndarray, n_channel_to_pad: int, channel_axis: int 
     image_shape[channel_axis] = n_channel_to_pad
     pad = np.zeros(image_shape)
     return np.concatenate((image, pad), axis=channel_axis)
+
+def remove_masked_region(
+    image: Union[np.ndarray, torch.Tensor], mask: Union[np.ndarray, torch.Tensor]
+):
+    if isinstance(image, torch.Tensor):
+        image = tensor_to_array(image)
+    if isinstance(mask, torch.Tensor):
+        mask = tensor_to_array(mask)
+    return image[mask.astype(bool)]

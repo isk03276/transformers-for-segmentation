@@ -2,8 +2,8 @@ from typing import Union
 
 import numpy as np
 import torch
-from scipy.spatial.distance import dice
 
+from utils.image import remove_masked_region
 from utils.torch import tensor_to_array
 
 
@@ -11,17 +11,6 @@ def pred_to_image(pred: torch.Tensor, class_dim: int) -> np.ndarray:
     pred_mask = pred.argmax(dim=class_dim)
     image = tensor_to_array(pred_mask)
     return image
-
-
-def remove_masked_region(
-    image: Union[np.ndarray, torch.Tensor], mask: Union[np.ndarray, torch.Tensor]
-):
-    if isinstance(image, torch.Tensor):
-        image = tensor_to_array(image)
-    if isinstance(mask, torch.Tensor):
-        mask = tensor_to_array(mask)
-    return image[mask.astype(bool)]
-
 
 def get_iou(
     pred: Union[np.ndarray, torch.Tensor],
