@@ -32,6 +32,7 @@ class BTCVDataset(BaseDataset):
         mask[:n_seq, :, :] = 1.0
         mask = torch.BoolTensor(mask)
         image = torch.Tensor(image)
+        image[n_seq:, :, :].requires_grad = False
         return image, mask
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
