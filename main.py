@@ -9,6 +9,7 @@ from dataset.dataset_getter import DatasetGetter
 from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
+from utils.visdom_monitor import VisdomMonitor
 from transformers_for_segmentation.unetr.model import UnetR
 from transformers_for_segmentation.unetr.learner import Learner
 
@@ -70,6 +71,9 @@ def run(args):
     # Train / Test Iteration
     learner = Learner(model=model, n_classes=args.num_classes)
     epoch = 1 if args.test else args.epoch
+    
+    if args.use_visdom_monitoring:
+        visdom = VisdomMonitor()
 
     if not args.test:
         model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
@@ -84,6 +88,9 @@ def run(args):
             learning_info = learner.step(
                 images=images, labels=labels, mask=mask, is_train=not args.test
             )
+            if args.use_visdom_monitoring:
+                visdom.add_images(images, mask, caption="Input image")
+                visdom.add_images(labels, mask, caption="Ground Truth")
             loss_list.append(learning_info["loss"])
             iou_list.append(learning_info["iou"])
         loss_avg = np.mean(loss_list)
@@ -143,6 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("--epoch", type=int, default=200, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
+    parser.add_argument("--use-visdom-monitoring", action="store_true", help="Whether to visualize inferenced results")
     # save / load
     parser.add_argument(
         "--save-dir", type=str, default="checkpoints/", help="Dataset name (ex. cifar10"

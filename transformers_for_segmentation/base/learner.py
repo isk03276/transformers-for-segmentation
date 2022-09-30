@@ -42,6 +42,7 @@ class BaseLearner:
         preds = pred_to_image(preds, class_dim=1)
         iou = get_dice(preds, labels, mask)
         info_dict["iou"] = iou
+        info_dict["preds"] = preds
 
         if is_train:
             loss.backward()

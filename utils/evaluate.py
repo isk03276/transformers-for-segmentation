@@ -17,8 +17,8 @@ def get_iou(
     label: Union[np.ndarray, torch.Tensor],
     mask: Union[np.ndarray, torch.Tensor],
 ):
-    pred = remove_masked_region(pred, mask)
-    label = remove_masked_region(label, mask)
+    pred = remove_masked_region(pred, mask, flatten=True)
+    label = remove_masked_region(label, mask, flatten=True)
 
     intersection = np.logical_and(pred, label)
     union = np.logical_or(pred, label)
@@ -28,8 +28,8 @@ def get_iou(
 
 def get_dice(pred, label, mask):
     """Get dice score. This method has to be validated"""
-    pred = remove_masked_region(pred, mask)
-    label = remove_masked_region(label, mask)
+    pred = remove_masked_region(pred, mask, flatten=True)
+    label = remove_masked_region(label, mask, flatten=True)
 
     score = (pred == label).sum() * 2 / (len(pred) + len(label))
     return score

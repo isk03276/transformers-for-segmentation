@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import SimpleITK as sitk
 
+from utils.torch import tensor_to_array
+
 
 def pad_image(image: Union[np.ndarray, torch.Tensor]):
     pass
@@ -66,10 +68,15 @@ def channel_padding(image: np.ndarray, n_channel_to_pad: int, channel_axis: int 
     return np.concatenate((image, pad), axis=channel_axis)
 
 def remove_masked_region(
-    image: Union[np.ndarray, torch.Tensor], mask: Union[np.ndarray, torch.Tensor]
-):
+    image: Union[np.ndarray, torch.Tensor], mask: Union[np.ndarray, torch.Tensor], flatten: bool = False
+)-> np.ndarray:
     if isinstance(image, torch.Tensor):
         image = tensor_to_array(image)
     if isinstance(mask, torch.Tensor):
         mask = tensor_to_array(mask)
-    return image[mask.astype(bool)]
+    image_shape = image.shape
+    image = image[mask.astype(bool)]
+    if not flatten:
+        image_shape[1] = -1 #seq_num
+        image.reshape(image_shape)
+    return image
