@@ -2,31 +2,25 @@ import subprocess
 import time
 
 import torch
-from visdom import server
+import numpy as np
 from visdom import Visdom as viz
 
-from utils.image import remove_masked_region
+from utils.image import remove_padded_channels
 
 
 class VisdomMonitor:
-    def __init__(self, ip: str = "localhost", port:int = "8101"):
-        self.server = self.create_server(ip=ip, port=port)
+    def __init__(self):
         self.visdom = viz()
-        
-    def create_server(self, ip: str, port: int):
-        server = subprocess.Popen("visdom --hostname {} -port {}".format(ip, port), shell=True, stdout=subprocess.DEVNULL)
-        time.sleep(5)
-        server.communicate()
-        return server
-        
-    def add_images(self, images: torch.Tensor, masks: torch.BoolTensor, caption: str = None):
-        images_shape = images.shape
-        print(images.shape, masks.shape)
-        assert images_shape == masks.shape
-        images = remove_masked_region(image=images, mask=masks, flatten=False)
-        self.visdom = viz.images(images, opts=dict(caption=caption))
-        
+
+    def add_images(
+        self, images: torch.Tensor, depths: torch.Tensor, caption: str = None
+    ):
+        images = remove_padded_channels(images=images.squeeze(), depths=depths)
+        for image in images:
+            self.visdom.images(
+                tensor=np.expand_dims(image, 1), opts=dict(caption=caption)
+            )
+
     def close(self):
         self.visdom.close()
         self.server.terminate()
-        

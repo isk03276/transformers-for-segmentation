@@ -14,15 +14,15 @@ class BTCVDataset(BaseDataset):
 
     def get_image(self, image_file_name: str):
         image, _ = load_from_nii(image_file_name)
-        image, mask = self.image_prepocess(image)
+        image, mask, depth = self.image_prepocess(image)
         image = image.unsqueeze(dim=0)  # for adding image channel
-        return image, mask
+        return image, mask, depth
 
     def get_label(self, label_file_name: str):
         label, _ = load_from_nii(label_file_name)
-        label, mask = self.image_prepocess(label)
+        label, mask, depth = self.image_prepocess(label)
         label = label.to(dtype=torch.int64)
-        return label, mask
+        return label, mask, depth
 
     def image_prepocess(self, image) -> Tuple[torch.Tensor, torch.BoolTensor]:
         n_seq, _, _ = image.shape
@@ -33,18 +33,18 @@ class BTCVDataset(BaseDataset):
         mask = torch.BoolTensor(mask)
         image = torch.Tensor(image)
         image[n_seq:, :, :].requires_grad = False
-        return image, mask
+        return image, mask, n_seq
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
         if torch.is_tensor(index):
             index = index.tolist()
         image_file_name = self.image_files[index]
         label_file_name = self.label_files[index]
-        image, images_mask = self.get_image(image_file_name)
-        label, labels_mask = self.get_label(label_file_name)
-        assert images_mask.sum() == labels_mask.sum()
+        image, images_mask, image_depth = self.get_image(image_file_name)
+        label, _, label_depth = self.get_label(label_file_name)
+        assert image_depth == label_depth
         if self.transform:
             image = self.transform(image)
             label = self.transform(label)
 
-        return image, label, images_mask
+        return image, label, images_mask, image_depth

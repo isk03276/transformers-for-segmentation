@@ -67,16 +67,24 @@ def channel_padding(image: np.ndarray, n_channel_to_pad: int, channel_axis: int 
     pad = np.zeros(image_shape)
     return np.concatenate((image, pad), axis=channel_axis)
 
+
 def remove_masked_region(
-    image: Union[np.ndarray, torch.Tensor], mask: Union[np.ndarray, torch.Tensor], flatten: bool = False
-)-> np.ndarray:
-    if isinstance(image, torch.Tensor):
-        image = tensor_to_array(image)
-    if isinstance(mask, torch.Tensor):
-        mask = tensor_to_array(mask)
-    image_shape = image.shape
-    image = image[mask.astype(bool)]
-    if not flatten:
-        image_shape[1] = -1 #seq_num
-        image.reshape(image_shape)
-    return image
+    images: Union[np.ndarray, torch.Tensor], masks: Union[np.ndarray, torch.Tensor]
+) -> np.ndarray:
+    if isinstance(images, torch.Tensor):
+        images = tensor_to_array(images)
+    if isinstance(masks, torch.Tensor):
+        masks = tensor_to_array(masks)
+    return images[masks.astype(bool)]
+
+
+def remove_padded_channels(
+    images: Union[np.ndarray, torch.Tensor], depths: torch.Tensor
+) -> np.ndarray:
+    if isinstance(images, torch.Tensor):
+        images = tensor_to_array(images)
+    image_list = []
+    for depth, image in zip(depths, images):
+        image_list.append(image[:depth, :])
+    result = np.array(image_list)
+    return result

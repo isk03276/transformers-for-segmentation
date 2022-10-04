@@ -71,7 +71,7 @@ def run(args):
     # Train / Test Iteration
     learner = Learner(model=model, n_classes=args.num_classes)
     epoch = 1 if args.test else args.epoch
-    
+
     if args.use_visdom_monitoring:
         visdom = VisdomMonitor()
 
@@ -82,15 +82,15 @@ def run(args):
 
     for epoch in range(epoch):
         loss_list, dice_list = [], []
-        for images, labels, mask in dataset_loader:
+        for images, labels, mask, depths in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
             learning_info = learner.step(
                 images=images, labels=labels, mask=mask, is_train=not args.test
             )
             if args.use_visdom_monitoring:
-                visdom.add_images(images, mask, caption="Input image")
-                visdom.add_images(labels, mask, caption="Ground Truth")
+                visdom.add_images(images, depths=depths, caption="Input image")
+                visdom.add_images(labels, depths=depths, caption="Ground Truth")
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
@@ -150,7 +150,11 @@ if __name__ == "__main__":
     parser.add_argument("--epoch", type=int, default=200, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
-    parser.add_argument("--use-visdom-monitoring", action="store_true", help="Whether to visualize inferenced results")
+    parser.add_argument(
+        "--use-visdom-monitoring",
+        action="store_true",
+        help="Whether to visualize inferenced results",
+    )
     # save / load
     parser.add_argument(
         "--save-dir", type=str, default="checkpoints/", help="Dataset name (ex. cifar10"
