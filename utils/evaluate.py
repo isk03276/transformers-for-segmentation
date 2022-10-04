@@ -26,10 +26,15 @@ def get_iou(
     return iou
 
 
-def get_dice(pred, label, mask):
+def get_dice(pred, label, mask, n_classes: int, epsilon: float = 1e-3):
     """Get dice score. This method has to be validated"""
     pred = remove_masked_region(pred, mask, flatten=True)
     label = remove_masked_region(label, mask, flatten=True)
-
-    score = (pred == label).sum() * 2 / (len(pred) + len(label))
-    return score
+    
+    dice_score = 0
+    for c in range(n_classes):
+        c_in_pred = np.where(pred == c)[0]
+        c_in_label = np.where(label == c)[0]
+        dice_score += (len(np.where(c_in_pred == c_in_label)[0]) * 2  + epsilon) / (len(c_in_pred) + len(c_in_label) + epsilon)
+    dice_score /= n_classes
+    return dice_score

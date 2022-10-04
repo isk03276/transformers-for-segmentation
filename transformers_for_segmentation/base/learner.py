@@ -40,8 +40,8 @@ class BaseLearner:
         info_dict["loss"] = loss.item()
 
         preds = pred_to_image(preds, class_dim=1)
-        iou = get_dice(preds, labels, mask)
-        info_dict["iou"] = iou
+        dice = get_dice(preds, labels, mask, n_classes=self.n_classes)
+        info_dict["dice"] = dice
         info_dict["preds"] = preds
 
         if is_train:

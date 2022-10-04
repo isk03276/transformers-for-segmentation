@@ -81,7 +81,7 @@ def run(args):
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
-        loss_list, iou_list = [], []
+        loss_list, dice_list = [], []
         for images, labels, mask in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
@@ -92,18 +92,18 @@ def run(args):
                 visdom.add_images(images, mask, caption="Input image")
                 visdom.add_images(labels, mask, caption="Ground Truth")
             loss_list.append(learning_info["loss"])
-            iou_list.append(learning_info["iou"])
+            dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
-        iou_avg = np.mean(iou_list)
+        dice_avg = np.mean(dice_list)
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
-            logger.log(tag="Traning/IOU", value=iou_avg, step=epoch + 1)
+            logger.log(tag="Traning/Dice Score", value=dice_avg, step=epoch + 1)
 
-        print("[Epoch {}] Loss : {} | IOU : {}".format(epoch, loss_avg, iou_avg))
+        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, loss_avg, dice_avg))
 
     logger.close()
 
