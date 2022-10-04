@@ -2,6 +2,7 @@ from typing import Union, Tuple
 
 import numpy as np
 import torch
+from skimage.transform import resize
 
 from dataset.base_dataset import BaseDataset
 from utils.image import load_from_nii, channel_padding
@@ -25,15 +26,15 @@ class BTCVDataset(BaseDataset):
         return label, mask, depth
 
     def image_prepocess(self, image) -> Tuple[torch.Tensor, torch.BoolTensor]:
-        n_seq, _, _ = image.shape
-        image = np.resize(image, (n_seq, 96, 96))
-        image = channel_padding(image, self.max_seq - n_seq, channel_axis=0)
+        depth, _, _ = image.shape
+        image = resize(image, (depth, 128, 128))
+        image = channel_padding(image, self.max_seq - depth, channel_axis=0)
         mask = np.zeros_like(image)
-        mask[:n_seq, :, :] = 1.0
+        mask[:depth, :, :] = 1.0
         mask = torch.BoolTensor(mask)
         image = torch.Tensor(image)
-        image[n_seq:, :, :].requires_grad = False
-        return image, mask, n_seq
+        image[depth:, :, :].requires_grad = False
+        return image, mask, depth
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
         if torch.is_tensor(index):

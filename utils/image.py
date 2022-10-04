@@ -48,7 +48,7 @@ def slice_image_to_patches(
     return patches
 
 
-def load_from_nii(path_to_load: str) -> Tuple[np.ndarray, dict]:
+def load_from_nii(path_to_load: str) -> np.ndarray:
     """
     Load image array from the nii file.
     """
@@ -58,6 +58,8 @@ def load_from_nii(path_to_load: str) -> Tuple[np.ndarray, dict]:
     spacing = np.asarray(sitk_image.GetSpacing())
     direction = np.asarray(sitk_image.GetDirection())
     image_info = {"origin": origin, "spacing": spacing, "direction": direction}
+    image = image[:,::-1,:]
+    image = np.clip(image, -125, 275)
     return image, image_info
 
 
