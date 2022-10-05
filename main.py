@@ -82,15 +82,15 @@ def run(args):
 
     for epoch in range(epoch):
         loss_list, dice_list = [], []
-        for images, labels, mask, depths in dataset_loader:
+        for images, labels in dataset_loader:
             images = images.to(device)
             labels = labels.to(device)
             learning_info = learner.step(
-                images=images, labels=labels, mask=mask, is_train=not args.test
+                images=images, labels=labels, is_train=not args.test
             )
             if args.use_visdom_monitoring:
-                visdom.add_images(images, depths=depths, caption="Input image")
-                visdom.add_images(labels, depths=depths, caption="Ground Truth")
+                visdom.add_images(images, caption="Input image")
+                visdom.add_images(labels, caption="Ground Truth")
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)

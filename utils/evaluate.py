@@ -13,24 +13,14 @@ def pred_to_image(pred: torch.Tensor, class_dim: int) -> np.ndarray:
     return image
 
 
-def get_iou(
-    pred: Union[np.ndarray, torch.Tensor],
-    label: Union[np.ndarray, torch.Tensor],
-    mask: Union[np.ndarray, torch.Tensor],
+def get_dice(
+    pred: Union[np.ndarray, torch.Tensor], label, n_classes: int, epsilon: float = 1e-3
 ):
-    pred = remove_masked_region(pred, mask)
-    label = remove_masked_region(label, mask)
-
-    intersection = np.logical_and(pred, label)
-    union = np.logical_or(pred, label)
-    iou = np.sum(intersection) / np.sum(union)
-    return iou
-
-
-def get_dice(pred, label, mask, n_classes: int, epsilon: float = 1e-3):
     """Get dice score. This method has to be validated"""
-    pred = remove_masked_region(pred, mask)
-    label = remove_masked_region(label, mask)
+    if isinstance(pred, torch.Tensor):
+        pred = tensor_to_array(pred)
+    if isinstance(label, torch.Tensor):
+        label = tensor_to_array(label)
 
     dice_score = 0
     for c in range(n_classes):
