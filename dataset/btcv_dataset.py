@@ -2,50 +2,43 @@ from typing import Union, Tuple
 
 import numpy as np
 import torch
-from skimage.transform import resize
 
 from dataset.base_dataset import BaseDataset
-from utils.image import load_from_nii, channel_padding
+from utils.image import load_from_nii
 
 
 class BTCVDataset(BaseDataset):
-    def __init__(self, root: str, transform, max_seq: int = 96, *args, **kwargs):
+    def __init__(self, root: str, transform, image_size: int = 96, *args, **kwargs):
         super().__init__(root=root, transform=transform, *args, **kwargs)
-        self.max_seq = max_seq
+        self.image_size = image_size
 
     def get_image(self, image_file_name: str):
-        image, _ = load_from_nii(image_file_name)
-        image, mask, depth = self.image_prepocess(image)
+        image = load_from_nii(image_file_name, image_size=self.image_size)
+        image = self.image_prepocess(image, is_label=False)
         image = image.unsqueeze(dim=0)  # for adding image channel
-        return image, mask, depth
+        return image
 
     def get_label(self, label_file_name: str):
-        label, _ = load_from_nii(label_file_name)
-        label, mask, depth = self.image_prepocess(label)
+        label = load_from_nii(label_file_name, image_size=self.image_size)
+        label = self.image_prepocess(label, is_label=False)
         label = label.to(dtype=torch.int64)
-        return label, mask, depth
+        return label
 
-    def image_prepocess(self, image) -> Tuple[torch.Tensor, torch.BoolTensor]:
-        depth, _, _ = image.shape
-        image = resize(image, (depth, 128, 128))
-        image = channel_padding(image, self.max_seq - depth, channel_axis=0)
-        mask = np.zeros_like(image)
-        mask[:depth, :, :] = 1.0
-        mask = torch.BoolTensor(mask)
+    def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
+        if not is_label:
+            image = np.clip(image, -175, 275)
         image = torch.Tensor(image)
-        image[depth:, :, :].requires_grad = False
-        return image, mask, depth
+        return image
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
         if torch.is_tensor(index):
             index = index.tolist()
         image_file_name = self.image_files[index]
         label_file_name = self.label_files[index]
-        image, images_mask, image_depth = self.get_image(image_file_name)
-        label, _, label_depth = self.get_label(label_file_name)
-        assert image_depth == label_depth
+        image = self.get_image(image_file_name)
+        label = self.get_label(label_file_name)
         if self.transform:
             image = self.transform(image)
             label = self.transform(label)
 
-        return image, label, images_mask, image_depth
+        return image, label

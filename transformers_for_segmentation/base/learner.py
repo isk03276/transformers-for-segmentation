@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from transformers_for_segmentation.base.model import BaseModel
-from utils.evaluate import get_iou, pred_to_image, get_dice
+from utils.evaluate import pred_to_image, get_dice
 
 
 class BaseLearner:
@@ -22,11 +22,7 @@ class BaseLearner:
         return loss
 
     def step(
-        self,
-        images: torch.Tensor,
-        labels: torch.Tensor,
-        mask: torch.BoolTensor,
-        is_train: bool = True,
+        self, images: torch.Tensor, labels: torch.Tensor, is_train: bool = True,
     ) -> dict:
         if is_train:
             self.model.train()
@@ -40,7 +36,7 @@ class BaseLearner:
         info_dict["loss"] = loss.item()
 
         preds = pred_to_image(preds, class_dim=1)
-        dice = get_dice(preds, labels, mask, n_classes=self.n_classes)
+        dice = get_dice(preds, labels, n_classes=self.n_classes)
         info_dict["dice"] = dice
         info_dict["preds"] = preds
 
