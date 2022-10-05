@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class MultiHeadAttention(nn.Module):
+class MultiHeadSelfAttention(nn.Module):
     def __init__(self, n_dim: int, n_heads: int):
         super().__init__()
         assert n_dim % n_heads == 0
