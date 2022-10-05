@@ -91,6 +91,7 @@ def run(args):
             )
             if args.use_visdom_monitoring:
                 visdom.add_train_images(input_batches=images, label_batches=labels)
+                visdom.add_batched_label_images(label_batches=learning_info["preds"], caption="Predicted Output")
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)

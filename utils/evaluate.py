@@ -6,10 +6,8 @@ import torch
 from utils.torch import tensor_to_array
 
 
-def pred_to_image(pred: torch.Tensor, class_dim: int) -> np.ndarray:
-    pred_mask = pred.argmax(dim=class_dim)
-    image = tensor_to_array(pred_mask)
-    return image
+def pred_to_image(pred: torch.Tensor, class_dim: int) -> torch.Tensor:
+    return pred.argmax(dim=class_dim).cpu().detach()
 
 
 def get_dice(
