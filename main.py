@@ -1,3 +1,4 @@
+from cProfile import label
 import os
 import argparse
 import datetime
@@ -89,8 +90,7 @@ def run(args):
                 images=images, labels=labels, is_train=not args.test
             )
             if args.use_visdom_monitoring:
-                visdom.add_images(images, caption="Input image")
-                visdom.add_images(labels, caption="Ground Truth")
+                visdom.add_train_images(input_batches=images, label_batches=labels)
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         help="Whether to use cnn based patch embedding",
     )
     # train / test
-    parser.add_argument("--epoch", type=int, default=200, help="Learning epoch")
+    parser.add_argument("--epoch", type=int, default=1000, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
     parser.add_argument(

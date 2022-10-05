@@ -2,7 +2,6 @@ from typing import Union, Tuple
 
 import numpy as np
 import torch
-
 from dataset.base_dataset import BaseDataset
 from utils.image import load_from_nii
 
@@ -20,14 +19,15 @@ class BTCVDataset(BaseDataset):
 
     def get_label(self, label_file_name: str):
         label = load_from_nii(label_file_name, image_size=self.image_size)
-        label = self.image_prepocess(label, is_label=False)
+        label = self.image_prepocess(label, is_label=True)
         label = label.to(dtype=torch.int64)
         return label
 
     def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
-        if not is_label:
-            image = np.clip(image, -175, 275)
         image = torch.Tensor(image)
+        if not is_label:
+            image = torch.clamp(image, min=-175, max=275)
+            image = (image + 175) / (275 + 175) # min max normalization
         return image
 
     def __getitem__(self, index: Union[int, torch.Tensor]):

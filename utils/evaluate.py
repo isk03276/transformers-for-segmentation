@@ -3,7 +3,6 @@ from typing import Union
 import numpy as np
 import torch
 
-from utils.image import remove_masked_region
 from utils.torch import tensor_to_array
 
 

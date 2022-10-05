@@ -3,6 +3,7 @@ from typing import Union
 import numpy as np
 import torch
 import SimpleITK as sitk
+from skimage import color
 
 from utils.torch import tensor_to_array
 
@@ -99,3 +100,14 @@ def remove_padded_channels(
         image_list.append(image[:depth, :])
     result = np.array(image_list)
     return result
+
+
+def label_to_rgb(image: torch.Tensor, bg_label: int = 0) -> torch.Tensor:
+    image = tensor_to_array(image)
+    image = color.label2rgb(image, bg_label=bg_label)
+    image = torch.Tensor(image)
+    if len(image.shape) == 5: # batched data
+        image = image.permute(0,1,4,2,3)
+    elif len(image.shape) == 4:
+        image = image.permute(0,3,1,2)
+    return image
