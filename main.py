@@ -1,4 +1,3 @@
-from cProfile import label
 import os
 import argparse
 import datetime
@@ -93,7 +92,9 @@ def run(args):
             )
             if args.use_visdom_monitoring:
                 visdom.add_train_images(input_batches=images, label_batches=labels)
-                visdom.add_batched_label_images(label_batches=learning_info["preds"], caption="Predicted Output")
+                visdom.add_batched_label_images(
+                    label_batches=learning_info["preds"], caption="Predicted Output"
+                )
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
@@ -132,7 +133,9 @@ if __name__ == "__main__":
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
     # model
-    parser.add_argument("--model-name", type=str, default="deformable_unetr", help="Model name")
+    parser.add_argument(
+        "--model-name", type=str, default="deformable_unetr", help="Model name"
+    )
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
         "--embedding-size", type=int, default=768, help="Number of hidden units"

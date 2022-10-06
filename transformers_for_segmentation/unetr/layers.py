@@ -1,7 +1,10 @@
 import torch.nn as nn
 
-from transformers_for_segmentation.common.attention.multi_head_self_attention import MultiHeadSelfAttention
+from transformers_for_segmentation.common.attention.multi_head_self_attention import (
+    MultiHeadSelfAttention,
+)
 from transformers_for_segmentation.common.layers import MLPBlock
+
 
 class Deconv3DLayer(nn.Module):
     def __init__(

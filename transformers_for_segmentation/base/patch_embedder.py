@@ -1,5 +1,3 @@
-from turtle import pos
-from requests import patch
 import torch
 import torch.nn as nn
 
@@ -56,7 +54,6 @@ class BasePatchEmbedder(nn.Module):
         return position_embedding
 
     def forward(self, x):
-        batch_size = x.size(0)
         if self.use_cnn_embedding:
             embs = self.cnn_patch_projection(x)
         else:
