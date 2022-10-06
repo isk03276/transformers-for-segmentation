@@ -11,8 +11,8 @@ from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
 from utils.visdom_monitor import VisdomMonitor
-from transformers_for_segmentation.unetr.model import UnetR
-from transformers_for_segmentation.unetr.learner import Learner
+from transformers_for_segmentation.get_model import get_model
+from transformers_for_segmentation.base.learner import BaseLearner as Learner
 
 
 def get_current_time() -> str:
@@ -44,6 +44,8 @@ def run(args):
     n_channel, n_seq, image_size = sampled_data.size()[1:4]
 
     # Model Instantiation
+    model_cls = get_model(model_name=args.model_name)
+    
     if args.load_from and args.load_model_config:
         dir_path = os.path.dirname(args.load_from)
         config_file_path = dir_path + "/config.yaml"
@@ -54,7 +56,7 @@ def run(args):
         args.heads_num = config["heads_num"]
         args.classes_num = config["classes_num"]
 
-    model = UnetR(
+    model = model_cls(
         image_size=image_size,
         n_channel=n_channel,
         n_seq=n_seq,
@@ -129,6 +131,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
+    # model
+    parser.add_argument("--model-name", type=str, default="deformable_unetr", help="Model name")
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
         "--embedding-size", type=int, default=768, help="Number of hidden units"
