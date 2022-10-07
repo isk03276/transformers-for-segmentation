@@ -155,7 +155,7 @@ if __name__ == "__main__":
         help="Whether to use cnn based patch embedding",
     )
     # train / test
-    parser.add_argument("--epoch", type=int, default=1000, help="Learning epoch")
+    parser.add_argument("--epoch", type=int, default=500, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
     parser.add_argument(
