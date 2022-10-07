@@ -44,7 +44,7 @@ def run(args):
 
     # Model Instantiation
     model_cls = get_model(model_name=args.model_name)
-    
+
     if args.load_from and args.load_model_config:
         dir_path = os.path.dirname(args.load_from)
         config_file_path = dir_path + "/config.yaml"

@@ -31,7 +31,9 @@ class VisdomMonitor:
         self, label_batches: torch.Tensor, caption: str = None
     ):
         rgb_labels = label_to_rgb(label_batches)
-        images = rgb_labels.squeeze(1).flatten(start_dim=0, end_dim=1)  # flatten batches
+        images = rgb_labels.squeeze(1).flatten(
+            start_dim=0, end_dim=1
+        )  # flatten batches
         self.visdom.images(tensor=images, opts=dict(caption=caption))
 
     def close(self):
