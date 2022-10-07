@@ -1,1 +1,3 @@
-# transformers-for-segmentation
+# SimpleViT
+Transformers for 3d image segmentation
+
