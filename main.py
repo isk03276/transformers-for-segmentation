@@ -99,6 +99,7 @@ def run(args):
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
         dice_avg = np.mean(dice_list)
+        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, loss_avg, dice_avg))
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
@@ -106,9 +107,8 @@ def run(args):
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
             logger.log(tag="Traning/Dice Score", value=dice_avg, step=epoch + 1)
-
-        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, loss_avg, dice_avg))
-
+        else:
+            break
     logger.close()
 
 

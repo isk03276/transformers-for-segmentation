@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from visdom import Visdom as viz
 
 from utils.image import label_to_rgb
@@ -22,7 +21,7 @@ class VisdomMonitor:
     def add_batched_input_images(
         self, image_batches: torch.Tensor, caption: str = None
     ):
-        images = image_batches.squeeze().flatten(
+        images = image_batches.squeeze(1).flatten(
             start_dim=0, end_dim=1
         )  # flatten batches
         images = images.unsqueeze(1)  # D*H*W -> D*C*H*W
@@ -32,7 +31,7 @@ class VisdomMonitor:
         self, label_batches: torch.Tensor, caption: str = None
     ):
         rgb_labels = label_to_rgb(label_batches)
-        images = rgb_labels.squeeze().flatten(start_dim=0, end_dim=1)  # flatten batches
+        images = rgb_labels.squeeze(1).flatten(start_dim=0, end_dim=1)  # flatten batches
         self.visdom.images(tensor=images, opts=dict(caption=caption))
 
     def close(self):
