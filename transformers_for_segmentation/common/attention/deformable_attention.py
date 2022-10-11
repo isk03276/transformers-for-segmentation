@@ -9,7 +9,7 @@ from transformers_for_segmentation.common.attention.multi_head_self_attention im
 
 
 class DeformableAttention(MultiHeadSelfAttention):
-    def __init__(self, n_dim: int, n_heads: int, n_groups: int, kernel_size: int = 1):
+    def __init__(self, n_dim: int, n_heads: int, n_groups: int, kernel_size: int = 5):
         super().__init__(n_dim=n_dim, n_heads=n_heads)
         assert n_dim % n_groups == 0, "n_dim % n_groups must be 0."
 
@@ -24,6 +24,7 @@ class DeformableAttention(MultiHeadSelfAttention):
                 out_channels=self.n_group_dim,
                 kernel_size=kernel_size,
                 groups=n_groups,
+                padding=kernel_size // 2,
             ),
             nn.GELU(),
             nn.Conv3d(
@@ -45,28 +46,23 @@ class DeformableAttention(MultiHeadSelfAttention):
         batch_size, n_dim, depth, height, width = x.size()
         queries = self.query(x)
         grouped_queries = einops.rearrange(
-            queries,
-            "b (g c) d h w  -> (b g) c d h w",
-            g=self.n_groups,
+            queries, "b (g c) d h w  -> (b g) c d h w", g=self.n_groups,
         )
         offset = self.offset_net(grouped_queries)
-        offset = einops.rearrange(offset, "b p d h w -> b d h w p")
-        ref_points = self.create_grid_like(x)
-        ref_points = einops.rearrange(ref_points, 'p d h w -> d h w p')
-        deformed_points = (offset + ref_points).tanh()
-        
+        grid = self.create_grid_like(x)
+        deformed_points = offset + grid
+        deformed_points = self.normalize_grid(deformed_points)
+
         x_sampled = F.grid_sample(
-            einops.rearrange(
-                x,
-                "b (g gc) d h w -> (b g) gc d h w",
-                g=self.n_groups,
-            ),
+            einops.rearrange(x, "b (g gc) d h w -> (b g) gc d h w", g=self.n_groups,),
             deformed_points,
             mode="bilinear",
             padding_mode="zeros",
             align_corners=False,
         )
-        x_sampled = einops.rearrange(x_sampled, "(b g) d ... -> b (g d) ...", b = batch_size)
+        x_sampled = einops.rearrange(
+            x_sampled, "(b g) d ... -> b (g d) ...", b=batch_size
+        )
 
         queries = queries.reshape(
             batch_size * self.n_heads, self.n_head_dim, depth * height * width
@@ -82,13 +78,26 @@ class DeformableAttention(MultiHeadSelfAttention):
         result = result.reshape(batch_size, n_dim, depth, height, width)
         return result
 
-    def create_grid_like(self, tensor, dim = 0):
+    def create_grid_like(self, tensor, dim=0):
         depth, height, width, device = *tensor.shape[2:], tensor.device
-        grid = torch.stack(torch.meshgrid(
-            torch.arange(depth, device=device),
-            torch.arange(height, device=device),
-            torch.arange(width, device=device),
-        ), dim=dim)
+        grid = torch.stack(
+            torch.meshgrid(
+                torch.arange(depth, device=device),
+                torch.arange(height, device=device),
+                torch.arange(width, device=device),
+            ),
+            dim=dim,
+        )
         grid.requires_grad = False
         grid = grid.type_as(tensor)
         return grid
+
+    def normalize_grid(self, grid, dim=1, out_dim=-1):
+        d, h, w = grid.shape[-3:]
+        grid_d, grid_h, grid_w = grid.unbind(dim=dim)
+
+        grid_d = 2.0 * grid_d / max(d - 1, 1) - 1.0
+        grid_h = 2.0 * grid_h / max(h - 1, 1) - 1.0
+        grid_w = 2.0 * grid_w / max(w - 1, 1) - 1.0
+
+        return torch.stack((grid_d, grid_h, grid_w), dim=out_dim)
