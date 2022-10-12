@@ -13,25 +13,26 @@ class MultiHeadSelfAttention(BaseAttention):
         self.n_heads = n_heads
         self.scaling_factor = n_dim ** (-0.5)
 
-        self.query = nn.Linear(n_dim, n_dim)
-        self.key = nn.Linear(n_dim, n_dim)
-        self.value = nn.Linear(n_dim, n_dim)
-        self.linear = nn.Linear(n_dim, n_dim)
+        self.to_query = nn.Linear(n_dim, n_dim)
+        self.to_key = nn.Linear(n_dim, n_dim)
+        self.to_value = nn.Linear(n_dim, n_dim)
+        self.out = nn.Linear(n_dim, n_dim)
 
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
-        query = self.query(x)
-        key = self.key(x)
-        value = self.value(x)
+        query = self.to_query(x)
+        key = self.to_key(x)
+        value = self.to_value(x)
         attention_map = self.get_attention_map(query=query, key=key)
         result = self.do_attention(attention_map=attention_map, value=value)
-        result = self.linear(result)
+        result = self.out(result)
         return result
     
     def do_attention(self, attention_map: torch.Tensor, value: torch.Tensor):
         value = self.split_multiple_heads(value)
         result = torch.matmul(attention_map, value)
+        result = self.merge_multiple_heads(result)
         return result
     
     def get_attention_map(self, query: torch.Tensor, key: torch.Tensor):

@@ -134,7 +134,7 @@ if __name__ == "__main__":
     )
     # model
     parser.add_argument(
-        "--model-name", type=str, default="deformable_unetr", help="Model name"
+        "--model-name", type=str, default="unetr", help="Model name"
     )
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
