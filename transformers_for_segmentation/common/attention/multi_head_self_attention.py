@@ -28,13 +28,13 @@ class MultiHeadSelfAttention(BaseAttention):
         result = self.do_attention(attention_map=attention_map, value=value)
         result = self.out(result)
         return result
-    
+
     def do_attention(self, attention_map: torch.Tensor, value: torch.Tensor):
         value = self.split_multiple_heads(value)
         result = torch.matmul(attention_map, value)
         result = self.merge_multiple_heads(result)
         return result
-    
+
     def get_attention_map(self, query: torch.Tensor, key: torch.Tensor):
         query = self.split_multiple_heads(query)
         key = self.split_multiple_heads(key)

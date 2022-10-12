@@ -20,7 +20,7 @@ class DeformableUnetR(UnetR):
         n_heads: int,
         n_classes: int,
         use_cnn_embedding: bool,
-        n_groups: int = 8,
+        n_groups: int = 4,
     ):
         super().__init__(
             image_size=image_size,

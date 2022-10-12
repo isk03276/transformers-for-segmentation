@@ -133,9 +133,7 @@ if __name__ == "__main__":
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
     # model
-    parser.add_argument(
-        "--model-name", type=str, default="unetr", help="Model name"
-    )
+    parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
         "--embedding-size", type=int, default=768, help="Number of hidden units"
@@ -147,7 +145,7 @@ if __name__ == "__main__":
         help="Number of transformer encoder blocks",
     )
     parser.add_argument(
-        "--heads-num", type=int, default=12, help="Number of attention heads"
+        "--heads-num", type=int, default=8, help="Number of attention heads"
     )
     parser.add_argument(
         "--use-cnn-embedding",
