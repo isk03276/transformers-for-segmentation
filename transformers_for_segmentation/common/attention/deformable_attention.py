@@ -41,6 +41,7 @@ class DeformableAttention(MultiHeadSelfAttention):
         self.value = nn.Conv3d(
             in_channels=n_dim, out_channels=n_dim, kernel_size=1, stride=1, padding=0
         )
+        self.out = nn.Conv3d(in_channels=n_dim, out_channels=n_dim, kernel_size=1)
 
     def forward(self, x):
         batch_size, n_dim, depth, height, width = x.size()
@@ -63,19 +64,22 @@ class DeformableAttention(MultiHeadSelfAttention):
         x_sampled = einops.rearrange(
             x_sampled, "(b g) d ... -> b (g d) ...", b=batch_size
         )
-
-        queries = queries.reshape(
-            batch_size * self.n_heads, self.n_head_dim, depth * height * width
+        keys = self.key(x_sampled)
+        values = self.value(x_sampled)
+        queries, keys, values = map(
+            lambda t: einops.rearrange(t, "b (h d) ... -> b h (...) d", h=self.n_heads),
+            (queries, keys, values),
         )
-        keys = self.key(x_sampled).reshape(
-            batch_size * self.n_heads, self.n_head_dim, depth * height * width
+        attention = (
+            torch.einsum("b h i d, b h j d -> b h i j", queries, keys)
+            * self.scaling_factor
         )
-        values = self.value(x_sampled).reshape(
-            batch_size * self.n_heads, self.n_head_dim, depth * height * width
+        attention = F.softmax(attention, dim=-1)
+        result = torch.einsum("b h i j, b h j d -> b h i d", attention, values)
+        result = einops.rearrange(
+            result, "b h (s x y) d -> b (h d) s x y", s=depth, x=height, y=width
         )
-
-        result = self.scaled_dot_proudction(query=queries, key=keys, value=values)
-        result = result.reshape(batch_size, n_dim, depth, height, width)
+        result = self.out(result)
         return result
 
     def create_grid_like(self, tensor, dim=0):
