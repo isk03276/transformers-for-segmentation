@@ -31,7 +31,7 @@ class PatchEmbedder(nn.Module):
 
     def forward(self, x):
         embs = self.cnn_patch_projection(x)
-        # embs += self.position_embedding
+        embs += self.position_embedding
         return embs
 
     def ffn_patch_projection(self, x):

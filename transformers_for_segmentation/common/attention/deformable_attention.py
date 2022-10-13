@@ -77,10 +77,11 @@ class DeformableAttention(BaseAttention):
 
         key = self.to_key(x_sampled)
         value = self.to_value(x_sampled)
-        relative_positional_bias = self.ungroup_feature(
-            self.relative_positional_bias(grouped_query)
-        )
+        # relative_positional_bias = self.ungroup_feature(
+        #     self.relative_positional_bias(grouped_query)
+        # )
         # self.get_relative_positional_bias(x, deformed_points)
+        relative_positional_bias = None
         attention = self.get_attention_map(query=query, key=key)
         result = self.do_attention(
             attention_map=attention,
