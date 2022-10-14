@@ -109,7 +109,8 @@ def run(args):
             logger.log(tag="Traning/Dice Score", value=dice_avg, step=epoch + 1)
         else:
             break
-    logger.close()
+    if not args.test:
+        logger.close()
 
 
 if __name__ == "__main__":
