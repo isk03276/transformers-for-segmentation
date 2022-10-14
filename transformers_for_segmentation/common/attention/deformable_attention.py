@@ -47,14 +47,8 @@ class DeformableAttention(BaseAttention):
             nn.Tanh(),
         )
 
-        # self.relative_positional_bias = ContinuousRelativePositionalBias(n_dim=self.n_dim//4, n_groups=self.n_groups, n_heads=n_heads)
-        self.relative_positional_bias = nn.Conv3d(
-            self.n_group_dim,
-            self.n_group_dim,
-            kernel_size=3,
-            stride=1,
-            padding=1,
-            groups=self.n_groups,
+        self.position_bias = nn.Parameter(
+            torch.randn(self.n_dim, 6, 6, 6)
         )
 
         self.to_query = nn.Conv3d(
@@ -73,21 +67,16 @@ class DeformableAttention(BaseAttention):
         grouped_query = self.group_feature(query)
 
         deformed_points = self.get_offset(grouped_query=grouped_query)
-        x_sampled = x#self.sample_from_offset(x=x, deformed_points=deformed_points)
+        x_sampled = self.sample_from_offset(x=x, deformed_points=deformed_points)
+        x_sampled += self.position_bias
 
         key = self.to_key(x_sampled)
         value = self.to_value(x_sampled)
-        # relative_positional_bias = self.ungroup_feature(
-        #     self.relative_positional_bias(grouped_query)
-        # )
-        # self.get_relative_positional_bias(x, deformed_points)
-        relative_positional_bias = None
         attention = self.get_attention_map(query=query, key=key)
         result = self.do_attention(
             attention_map=attention,
             value=value,
             x_size=x.size(),
-            relative_positional_bias=relative_positional_bias,
         )
         result = self.out(result)
         return result
@@ -97,7 +86,6 @@ class DeformableAttention(BaseAttention):
         attention_map: torch.Tensor,
         value: torch.Tensor,
         x_size: tuple,
-        relative_positional_bias: torch.Tensor = None,
     ):
         _, _, depth, height, width = x_size
         value, _ = self.split_heads((value, value))  # to be modified
@@ -110,8 +98,6 @@ class DeformableAttention(BaseAttention):
             height=height,
             width=width,
         )
-        if relative_positional_bias is not None:
-            result += relative_positional_bias
         return result
 
     def get_attention_map(
@@ -123,14 +109,6 @@ class DeformableAttention(BaseAttention):
         attention_map *= self.scaling_factor
         attention_map = attention_map.softmax(dim=-1)
         return attention_map
-
-    def get_relative_positional_bias(
-        self, x: torch.Tensor, deformed_points: torch.Tensor
-    ):
-        grid = self.create_grid(x)
-        grid = self.normalize_grid(grid, dim=0)
-        relative_positional_bias = self.relative_positional_bias(grid, deformed_points)
-        return relative_positional_bias
 
     def get_offset(self, grouped_query: torch.Tensor):
         offset = self.offset_net(grouped_query)
@@ -198,38 +176,3 @@ class DeformableAttention(BaseAttention):
         grid_w = 2.0 * grid_w / max(w - 1, 1) - 1.0
 
         return torch.stack((grid_d, grid_h, grid_w), dim=out_dim)
-
-
-class ContinuousRelativePositionalBias(nn.Module):
-    def __init__(self, n_dim: int, n_heads: int, n_groups: int, depth: int = 1):
-        super().__init__()
-        self.n_dim = n_dim
-        self.n_heads = n_heads
-        self.n_groups = n_groups
-
-        self.mlp = nn.ModuleList([])
-        self.mlp.append(nn.Sequential(nn.Linear(3, self.n_dim), nn.ReLU()))
-        for _ in range(depth - 1):
-            self.mlp.append(nn.Sequential(nn.Linear(self.n_dim, self.n_dim), nn.ReLU()))
-
-        self.mlp.append(nn.Linear(self.n_dim, self.n_heads // self.n_groups))
-
-    def forward(self, grid_q, grid_kv):
-        device, dtype = grid_q.device, grid_kv.dtype
-
-        grid_q = einops.rearrange(grid_q, "... c -> 1 (...) c")
-        grid_kv = einops.rearrange(grid_kv, "b ... c -> b (...) c")
-
-        pos = einops.rearrange(grid_q, "b i c -> b i 1 c") - einops.rearrange(
-            grid_kv, "b j c -> b 1 j c"
-        )
-        bias = torch.sign(pos) * torch.log(
-            pos.abs() + 1
-        )  # log of distance is sign(rel_pos) * log(abs(rel_pos) + 1)
-
-        for layer in self.mlp:
-            bias = layer(bias)
-
-        bias = einops.rearrange(bias, "(b g) i j o -> b (g o) i j", g=self.n_groups)
-
-        return bias
