@@ -56,7 +56,7 @@ class DeformableUnetR(UnetR):
         embs = []
         for encoder_block in self.encoders:
             x = encoder_block(x)
-            embs.append(self.embedding_to_image(x))
+            embs.append(x)
 
         # decoding
         z3, z6, z9, z12 = embs[2::3]
