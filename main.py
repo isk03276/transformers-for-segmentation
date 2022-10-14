@@ -10,8 +10,8 @@ from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
 from utils.visdom_monitor import VisdomMonitor
-from transformers_for_segmentation.unetr.model import UnetR
-from transformers_for_segmentation.unetr.learner import Learner
+from transformers_for_segmentation.get_model import get_model
+from transformers_for_segmentation.base.learner import BaseLearner as Learner
 
 
 def get_current_time() -> str:
@@ -43,6 +43,8 @@ def run(args):
     n_channel, n_seq, image_size = sampled_data.size()[1:4]
 
     # Model Instantiation
+    model_cls = get_model(model_name=args.model_name)
+
     if args.load_from and args.load_model_config:
         dir_path = os.path.dirname(args.load_from)
         config_file_path = dir_path + "/config.yaml"
@@ -53,7 +55,7 @@ def run(args):
         args.heads_num = config["heads_num"]
         args.classes_num = config["classes_num"]
 
-    model = UnetR(
+    model = model_cls(
         image_size=image_size,
         n_channel=n_channel,
         n_seq=n_seq,
@@ -89,12 +91,15 @@ def run(args):
                 images=images, labels=labels, is_train=not args.test
             )
             if args.use_visdom_monitoring:
-                visdom.add_images(images, caption="Input image")
-                visdom.add_images(labels, caption="Ground Truth")
+                visdom.add_train_images(input_batches=images, label_batches=labels)
+                visdom.add_batched_label_images(
+                    label_batches=learning_info["preds"], caption="Predicted Output"
+                )
             loss_list.append(learning_info["loss"])
             dice_list.append(learning_info["dice"])
         loss_avg = np.mean(loss_list)
         dice_avg = np.mean(dice_list)
+        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, loss_avg, dice_avg))
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
@@ -102,10 +107,10 @@ def run(args):
             # Log
             logger.log(tag="Training/Loss", value=loss_avg, step=epoch + 1)
             logger.log(tag="Traning/Dice Score", value=dice_avg, step=epoch + 1)
-
-        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, loss_avg, dice_avg))
-
-    logger.close()
+        else:
+            break
+    if not args.test:
+        logger.close()
 
 
 if __name__ == "__main__":
@@ -128,6 +133,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
+    # model
+    parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
     parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
     parser.add_argument(
         "--embedding-size", type=int, default=768, help="Number of hidden units"
@@ -139,7 +146,7 @@ if __name__ == "__main__":
         help="Number of transformer encoder blocks",
     )
     parser.add_argument(
-        "--heads-num", type=int, default=12, help="Number of attention heads"
+        "--heads-num", type=int, default=8, help="Number of attention heads"
     )
     parser.add_argument(
         "--use-cnn-embedding",
@@ -147,7 +154,7 @@ if __name__ == "__main__":
         help="Whether to use cnn based patch embedding",
     )
     # train / test
-    parser.add_argument("--epoch", type=int, default=200, help="Learning epoch")
+    parser.add_argument("--epoch", type=int, default=500, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
     parser.add_argument(

@@ -14,7 +14,7 @@ class BaseLearner:
         self.optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     def define_loss_func(self):
-        raise NotImplementedError
+        return nn.CrossEntropyLoss()
 
     def estimate_loss(self, preds: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
 

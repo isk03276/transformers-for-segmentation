@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from transformers_for_segmentation.base.model import BaseModel
-from transformers_for_segmentation.common.encoder import EncoderBlock
+from transformers_for_segmentation.unetr.layers import EncoderBlock
 from transformers_for_segmentation.unetr.patch_embedder import PatchEmbedder
 from transformers_for_segmentation.unetr.layers import (
     Conv3DBlock,
