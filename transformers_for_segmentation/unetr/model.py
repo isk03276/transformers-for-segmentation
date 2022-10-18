@@ -18,40 +18,32 @@ class UnetR(BaseModel):
         image_size: int,
         n_channel: int,
         n_seq: int,
-        n_patch: int,
-        n_dim: int,
-        n_heads: int,
-        use_cnn_embedding: bool,
         n_classes: int,
-        n_encoder_blocks: int = 12,
+        model_config_file_path: str
     ):
         super().__init__(
             image_size=image_size,
             n_channel=n_channel,
             n_seq=n_seq,
-            n_patch=n_patch,
-            n_dim=n_dim,
-            n_encoder_blocks=n_encoder_blocks,
-            n_heads=n_heads,
             n_classes=n_classes,
-            use_cnn_embedding=use_cnn_embedding,
+            model_config_file_path=model_config_file_path
         )
 
-        self.decoding_patch_dim = self.image_size // self.n_patch
+        self.decoding_patch_dim = self.image_size // self.configs["n_patch"]
 
         self.patch_embedder = PatchEmbedder(
             image_size=self.image_size,
             n_channel=self.n_channel,
-            n_patch=self.n_patch,
-            n_dim=self.n_dim,
-            use_cnn_embedding=self.use_cnn_embedding,
+            n_patch=self.configs["n_patch"],
+            n_dim=self.configs["n_dim"],
+            use_cnn_embedding=self.configs["use_cnn_embedding"],
         )
 
         self.encoders = nn.ModuleList()
         self.encoders.extend(
             [
-                EncoderBlock(n_dim=self.n_dim, n_heads=self.n_heads)
-                for _ in range(self.n_encoder_blocks)
+                EncoderBlock(n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"])
+                for _ in range(self.configs["n_encoder_blocks"])
             ]
         )
 
@@ -68,7 +60,7 @@ class UnetR(BaseModel):
         )
 
         self.decoder_3 = nn.Sequential(
-            Deconv3dBlock(in_channels=self.n_dim, out_channels=128),
+            Deconv3dBlock(in_channels=self.configs["n_dim"], out_channels=128),
             Deconv3dBlock(in_channels=128, out_channels=128),
             Deconv3dBlock(in_channels=128, out_channels=128),
         )
@@ -81,7 +73,7 @@ class UnetR(BaseModel):
         )
 
         self.decoder_6 = nn.Sequential(
-            Deconv3dBlock(in_channels=self.n_dim, out_channels=256),
+            Deconv3dBlock(in_channels=self.configs["n_dim"], out_channels=256),
             Deconv3dBlock(in_channels=256, out_channels=256),
         )
         self.decoder_6_merge = nn.Sequential(
@@ -92,7 +84,7 @@ class UnetR(BaseModel):
             in_channels=256, out_channels=128, kernel_size=2
         )
 
-        self.decoder_9 = Deconv3dBlock(in_channels=self.n_dim, out_channels=512)
+        self.decoder_9 = Deconv3dBlock(in_channels=self.configs["n_dim"], out_channels=512)
         self.decoder_9_merge = nn.Sequential(
             Conv3DBlock(in_channels=1024, out_channels=512),
             Conv3DBlock(in_channels=512, out_channels=512),
@@ -102,7 +94,7 @@ class UnetR(BaseModel):
         )
 
         self.decoder_12 = Deconv3DLayer(
-            in_channels=self.n_dim, out_channels=512, kernel_size=2
+            in_channels=self.configs["n_dim"], out_channels=512, kernel_size=2
         )
 
     def forward(self, x):
@@ -135,7 +127,7 @@ class UnetR(BaseModel):
     def embedding_to_image(self, x):
         return x.transpose(-1, -2,).reshape(
             -1,
-            self.n_dim,
+            self.configs["n_dim"],
             self.decoding_patch_dim,
             self.decoding_patch_dim,
             self.decoding_patch_dim,

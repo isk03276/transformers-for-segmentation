@@ -1,5 +1,7 @@
 import torch.nn as nn
 
+from utils.config import load_from_yaml
+
 
 class BaseModel(nn.Module):
     def __init__(
@@ -7,20 +9,12 @@ class BaseModel(nn.Module):
         image_size: int,
         n_channel: int,
         n_seq: int,
-        n_patch: int,
-        n_dim: int,
-        n_encoder_blocks: int,
-        n_heads: int,
         n_classes: int,
-        use_cnn_embedding: bool,
+        model_config_file_path: str,
     ):
         super().__init__()
         self.image_size = image_size
         self.n_channel = n_channel
         self.n_seq = n_seq
-        self.n_patch = n_patch
-        self.n_dim = n_dim
-        self.n_encoder_blocks = n_encoder_blocks
-        self.n_heads = n_heads
         self.n_classes = n_classes
-        self.use_cnn_embedding = use_cnn_embedding
+        self.configs = load_from_yaml(model_config_file_path)

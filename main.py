@@ -99,12 +99,8 @@ def run(args):
         image_size=image_size,
         n_channel=n_channel,
         n_seq=n_seq,
-        n_patch=args.patch_size,
-        n_dim=args.embedding_size,
-        n_encoder_blocks=args.encoder_blocks_num,
-        n_heads=args.heads_num,
-        use_cnn_embedding=args.use_cnn_embedding,
         n_classes=args.num_classes,
+        model_config_file_path=args.model_config_file,
     ).to(device)
 
     if args.load_from is not None:
@@ -173,24 +169,7 @@ if __name__ == "__main__":
     )
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
-    parser.add_argument("--patch-size", type=int, default=16, help="Image patch size")
-    parser.add_argument(
-        "--embedding-size", type=int, default=768, help="Number of hidden units"
-    )
-    parser.add_argument(
-        "--encoder-blocks-num",
-        type=int,
-        default=12,
-        help="Number of transformer encoder blocks",
-    )
-    parser.add_argument(
-        "--heads-num", type=int, default=8, help="Number of attention heads"
-    )
-    parser.add_argument(
-        "--use-cnn-embedding",
-        action="store_true",
-        help="Whether to use cnn based patch embedding",
-    )
+    parser.add_argument("--model-config-file", type=str, default="configs/unetr/default_unetr.yaml", help="Model name")
     # train / test
     parser.add_argument("--epoch", type=int, default=500, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
