@@ -45,17 +45,19 @@ def get_dataset(args):
     return main_dataset, validation_dataset
 
 
-def run_one_epoch(dataset_loader, model_interface, device, visdom=None):
+def run_one_epoch(
+    dataset_loader, model_interface, device, is_train, visdom_monitor=None
+):
     loss_list, dice_list = [], []
     for images, labels in dataset_loader:
         images = images.to(device)
         labels = labels.to(device)
         result_dict = model_interface.step(
-            images=images, labels=labels, is_train=not args.test
+            images=images, labels=labels, is_train=is_train
         )
-        if args.use_visdom_monitoring:
-            visdom.add_train_images(input_batches=images, label_batches=labels)
-            visdom.add_batched_label_images(
+        if visdom_monitor:
+            visdom_monitor.add_train_images(input_batches=images, label_batches=labels)
+            visdom_monitor.add_batched_label_images(
                 label_batches=result_dict["preds"], caption="Predicted Output"
             )
         loss_list.append(result_dict["loss"])
@@ -123,10 +125,11 @@ def run(args):
         model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
         logger = TensorboardLogger(model_save_dir)
         save_yaml(vars(args), model_save_dir + "config.yaml")
+        save_yaml(model.configs, model_save_dir + "model_config.yaml")
 
     for epoch in range(epoch):
         train_loss_avg, train_dice_avg = run_one_epoch(
-            main_dataset_loader, model_interface, device, visdom_monitor
+            main_dataset_loader, model_interface, device, not args.test, visdom_monitor
         )
         print(
             "[Epoch {}] Loss : {} | Dice : {}".format(
@@ -135,7 +138,11 @@ def run(args):
         )
         if validation_dataset_loader:
             validation_loss_avg, validation_dice_avg = run_one_epoch(
-                validation_dataset_loader, model_interface, device, visdom_monitor
+                validation_dataset_loader,
+                model_interface,
+                device,
+                False,
+                visdom_monitor,
             )
             # Log
             logger.log(tag="Validation/Loss", value=validation_loss_avg, step=epoch + 1)
@@ -192,7 +199,7 @@ if __name__ == "__main__":
         help="Model name",
     )
     # train / test
-    parser.add_argument("--epoch", type=int, default=500, help="Learning epoch")
+    parser.add_argument("--epoch", type=int, default=800, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
     parser.add_argument(
