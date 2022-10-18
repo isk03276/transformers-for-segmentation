@@ -7,12 +7,13 @@ from torch.utils.data import Dataset
 
 
 class BaseDataset(Dataset):
-    def __init__(self, root: str, transform, *args, **kwargs):
+    def __init__(self, root: str, transform, image_size: int):
         super().__init__()
 
         self.image_files = sorted(glob.glob(root + "/images/*"))
         self.label_files = sorted(glob.glob(root + "/labels/*"))
         self.transform = transform
+        self.image_size = image_size
 
     @abstractmethod
     def get_image(self, image_file_name: str):

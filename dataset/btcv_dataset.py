@@ -7,9 +7,8 @@ from utils.image import load_from_nii
 
 
 class BTCVDataset(BaseDataset):
-    def __init__(self, root: str, transform, image_size: int = 96, *args, **kwargs):
-        super().__init__(root=root, transform=transform, *args, **kwargs)
-        self.image_size = image_size
+    def __init__(self, root: str, transform, image_size: int = 96):
+        super().__init__(root=root, transform=transform, image_size=image_size)
 
     def get_image(self, image_file_name: str):
         image = load_from_nii(image_file_name, image_size=self.image_size)
