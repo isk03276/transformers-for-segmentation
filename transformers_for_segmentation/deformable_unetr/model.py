@@ -14,39 +14,30 @@ class DeformableUnetR(UnetR):
         image_size: int,
         n_channel: int,
         n_seq: int,
-        n_patch: int,
-        n_dim: int,
-        n_encoder_blocks: int,
-        n_heads: int,
         n_classes: int,
-        use_cnn_embedding: bool,
-        n_groups: int = 4,
+        model_config_file_path: str,
     ):
         super().__init__(
             image_size=image_size,
             n_channel=n_channel,
             n_seq=n_seq,
-            n_patch=n_patch,
-            n_dim=n_dim,
-            n_encoder_blocks=n_encoder_blocks,
-            n_heads=n_heads,
             n_classes=n_classes,
-            use_cnn_embedding=use_cnn_embedding,
+            model_config_file_path=model_config_file_path,
         )
         self.encoders = nn.ModuleList()
         self.encoders.extend(
             [
                 DeformableAttention(
-                    n_dim=self.n_dim, n_heads=self.n_heads, n_groups=n_groups
+                    n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"], n_groups=self.configs["n_groups"]
                 )
-                for _ in range(self.n_encoder_blocks)
+                for _ in range(self.configs["n_encoder_blocks"])
             ]
         )
         self.patch_embedder = PatchEmbedder(
             image_size=self.image_size,
             n_channel=self.n_channel,
-            n_patch=self.n_patch,
-            n_dim=self.n_dim,
+            n_patch=self.configs["n_patch"],
+            n_dim=self.configs["n_dim"],
         )
 
     def forward(self, x):
