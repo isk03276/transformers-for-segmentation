@@ -47,18 +47,31 @@ class DeformableAttention(BaseAttention):
             nn.Tanh(),
         )
 
-        self.position_bias = nn.Parameter(
-            torch.randn(self.n_dim, 6, 6, 6)
-        )
+        self.position_bias = nn.Parameter(torch.randn(self.n_dim, 6, 6, 6))
 
         self.to_query = nn.Conv3d(
-            in_channels=n_dim, out_channels=n_dim, kernel_size=1, stride=1, padding=0, bias=False
+            in_channels=n_dim,
+            out_channels=n_dim,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            bias=False,
         )
         self.to_key = nn.Conv3d(
-            in_channels=n_dim, out_channels=n_dim, kernel_size=1, stride=1, padding=0, bias=False
+            in_channels=n_dim,
+            out_channels=n_dim,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            bias=False,
         )
         self.to_value = nn.Conv3d(
-            in_channels=n_dim, out_channels=n_dim, kernel_size=1, stride=1, padding=0, bias=False
+            in_channels=n_dim,
+            out_channels=n_dim,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            bias=False,
         )
         self.out = nn.Conv3d(in_channels=n_dim, out_channels=n_dim, kernel_size=1)
 
@@ -74,18 +87,13 @@ class DeformableAttention(BaseAttention):
         value = self.to_value(x_sampled)
         attention = self.get_attention_map(query=query, key=key)
         result = self.do_attention(
-            attention_map=attention,
-            value=value,
-            x_size=x.size(),
+            attention_map=attention, value=value, x_size=x.size(),
         )
         result = self.out(result)
         return result
 
     def do_attention(
-        self,
-        attention_map: torch.Tensor,
-        value: torch.Tensor,
-        x_size: tuple,
+        self, attention_map: torch.Tensor, value: torch.Tensor, x_size: tuple,
     ):
         _, _, depth, height, width = x_size
         value, _ = self.split_heads((value, value))  # to be modified

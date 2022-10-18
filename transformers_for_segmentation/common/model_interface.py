@@ -6,7 +6,7 @@ from transformers_for_segmentation.base.model import BaseModel
 from utils.evaluate import pred_to_image, get_dice
 
 
-class BaseLearner:
+class ModelInterface:
     def __init__(self, model: BaseModel, n_classes: int, lr: float = 3e-4):
         self.model = model
         self.n_classes = n_classes
@@ -17,7 +17,6 @@ class BaseLearner:
         return nn.CrossEntropyLoss()
 
     def estimate_loss(self, preds: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-
         loss = self.loss_func(preds, labels)
         return loss
 
