@@ -73,10 +73,10 @@ def run(args):
     main_dataset_loader = DatasetGetter.get_dataset_loader(
         main_dataset, batch_size=1 if args.test else args.batch_size
     )
-    if validation_dataset:
-        validation_dataset_loader = DatasetGetter.get_dataset_loader(
+    
+    validation_dataset_loader = DatasetGetter.get_dataset_loader(
             validation_dataset, batch_size=1 if args.test else args.batch_size
-        )
+        ) if validation_dataset else None
 
     with torch.no_grad():
         sampled_data = next(iter(main_dataset_loader))[0]
@@ -116,6 +116,7 @@ def run(args):
 
     visdom_monitor = VisdomMonitor() if args.use_visdom_monitoring else None
 
+    # Init Logger
     if not args.test:
         model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
         logger = TensorboardLogger(model_save_dir)
@@ -126,6 +127,9 @@ def run(args):
         print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, train_loss_avg, train_dice_avg))
         if validation_dataset_loader:
             validation_loss_avg, validation_dice_avg = run_one_epoch(validation_dataset_loader, model_interface, device, visdom_monitor)
+            # Log
+            logger.log(tag="Validation/Loss", value=validation_loss_avg, step=epoch + 1)
+            logger.log(tag="Validation/Dice Score", value=validation_dice_avg, step=epoch + 1)
         
         if not args.test:
             # Save model
@@ -133,7 +137,7 @@ def run(args):
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
             logger.log(tag="Training/Loss", value=train_loss_avg, step=epoch + 1)
-            logger.log(tag="Traning/Dice Score", value=train_dice_avg, step=epoch + 1)
+            logger.log(tag="Training/Dice Score", value=train_dice_avg, step=epoch + 1)
         else:
             break
         
