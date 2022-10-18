@@ -28,7 +28,9 @@ class DeformableUnetR(UnetR):
         self.encoders.extend(
             [
                 DeformableAttention(
-                    n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"], n_groups=self.configs["n_groups"]
+                    n_dim=self.configs["n_dim"],
+                    n_heads=self.configs["n_heads"],
+                    n_groups=self.configs["n_groups"],
                 )
                 for _ in range(self.configs["n_encoder_blocks"])
             ]

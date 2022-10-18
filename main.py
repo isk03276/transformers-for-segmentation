@@ -44,7 +44,8 @@ def get_dataset(args):
         raise Exception
     return main_dataset, validation_dataset
 
-def run_one_epoch(dataset_loader, model_interface, device, visdom = None):
+
+def run_one_epoch(dataset_loader, model_interface, device, visdom=None):
     loss_list, dice_list = [], []
     for images, labels in dataset_loader:
         images = images.to(device)
@@ -63,6 +64,7 @@ def run_one_epoch(dataset_loader, model_interface, device, visdom = None):
     dice_avg = np.mean(dice_list)
     return loss_avg, dice_avg
 
+
 def run(args):
     device = get_device(args.device)
 
@@ -73,10 +75,14 @@ def run(args):
     main_dataset_loader = DatasetGetter.get_dataset_loader(
         main_dataset, batch_size=1 if args.test else args.batch_size
     )
-    
-    validation_dataset_loader = DatasetGetter.get_dataset_loader(
+
+    validation_dataset_loader = (
+        DatasetGetter.get_dataset_loader(
             validation_dataset, batch_size=1 if args.test else args.batch_size
-        ) if validation_dataset else None
+        )
+        if validation_dataset
+        else None
+    )
 
     with torch.no_grad():
         sampled_data = next(iter(main_dataset_loader))[0]
@@ -119,14 +125,24 @@ def run(args):
         save_yaml(vars(args), model_save_dir + "config.yaml")
 
     for epoch in range(epoch):
-        train_loss_avg, train_dice_avg = run_one_epoch(main_dataset_loader, model_interface, device, visdom_monitor)
-        print("[Epoch {}] Loss : {} | Dice : {}".format(epoch, train_loss_avg, train_dice_avg))
+        train_loss_avg, train_dice_avg = run_one_epoch(
+            main_dataset_loader, model_interface, device, visdom_monitor
+        )
+        print(
+            "[Epoch {}] Loss : {} | Dice : {}".format(
+                epoch, train_loss_avg, train_dice_avg
+            )
+        )
         if validation_dataset_loader:
-            validation_loss_avg, validation_dice_avg = run_one_epoch(validation_dataset_loader, model_interface, device, visdom_monitor)
+            validation_loss_avg, validation_dice_avg = run_one_epoch(
+                validation_dataset_loader, model_interface, device, visdom_monitor
+            )
             # Log
             logger.log(tag="Validation/Loss", value=validation_loss_avg, step=epoch + 1)
-            logger.log(tag="Validation/Dice Score", value=validation_dice_avg, step=epoch + 1)
-        
+            logger.log(
+                tag="Validation/Dice Score", value=validation_dice_avg, step=epoch + 1
+            )
+
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
@@ -136,7 +152,7 @@ def run(args):
             logger.log(tag="Training/Dice Score", value=train_dice_avg, step=epoch + 1)
         else:
             break
-        
+
     if not args.test:
         logger.close()
 
@@ -169,7 +185,12 @@ if __name__ == "__main__":
     )
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
-    parser.add_argument("--model-config-file", type=str, default="configs/unetr/default_unetr.yaml", help="Model name")
+    parser.add_argument(
+        "--model-config-file",
+        type=str,
+        default="configs/unetr/default_unetr.yaml",
+        help="Model name",
+    )
     # train / test
     parser.add_argument("--epoch", type=int, default=500, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")

@@ -19,14 +19,14 @@ class UnetR(BaseModel):
         n_channel: int,
         n_seq: int,
         n_classes: int,
-        model_config_file_path: str
+        model_config_file_path: str,
     ):
         super().__init__(
             image_size=image_size,
             n_channel=n_channel,
             n_seq=n_seq,
             n_classes=n_classes,
-            model_config_file_path=model_config_file_path
+            model_config_file_path=model_config_file_path,
         )
 
         self.decoding_patch_dim = self.image_size // self.configs["n_patch"]
@@ -42,7 +42,9 @@ class UnetR(BaseModel):
         self.encoders = nn.ModuleList()
         self.encoders.extend(
             [
-                EncoderBlock(n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"])
+                EncoderBlock(
+                    n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"]
+                )
                 for _ in range(self.configs["n_encoder_blocks"])
             ]
         )
@@ -84,7 +86,9 @@ class UnetR(BaseModel):
             in_channels=256, out_channels=128, kernel_size=2
         )
 
-        self.decoder_9 = Deconv3dBlock(in_channels=self.configs["n_dim"], out_channels=512)
+        self.decoder_9 = Deconv3dBlock(
+            in_channels=self.configs["n_dim"], out_channels=512
+        )
         self.decoder_9_merge = nn.Sequential(
             Conv3DBlock(in_channels=1024, out_channels=512),
             Conv3DBlock(in_channels=512, out_channels=512),
