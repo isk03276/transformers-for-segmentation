@@ -6,13 +6,19 @@ from utils.image import slice_image_to_patches
 
 class PatchEmbedder(nn.Module):
     def __init__(
-        self, image_size: int, n_channel: int, n_patch: int, n_dim: int,
+        self,
+        image_size: int,
+        n_channel: int,
+        n_patch: int,
+        n_dim: int,
+        use_static_positional_encoding: bool,
     ):
         super().__init__()
         self.image_size = image_size
         self.n_channel = n_channel
         self.n_patch = n_patch
         self.n_dim = n_dim
+        self.use_static_positional_encoding = use_static_positional_encoding
 
         self.projection = nn.Conv3d(
             in_channels=n_channel,
@@ -31,18 +37,10 @@ class PatchEmbedder(nn.Module):
 
     def forward(self, x):
         embs = self.cnn_patch_projection(x)
-        embs += self.position_embedding
-        return embs
-
-    def ffn_patch_projection(self, x):
-        patches = slice_image_to_patches(
-            images=x, patch_size=self.n_patch, flatten=True, is_3d_data=self.is_3d_data
-        )
-        embs = self.projection(patches)
+        if self.use_static_positional_encoding:
+            embs += self.position_embedding
         return embs
 
     def cnn_patch_projection(self, x):
         embs = self.projection(x)
-        # embs = embs.flatten(start_dim=2)
-        # embs = embs.transpose(-1, -2)
         return embs

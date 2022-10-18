@@ -31,6 +31,9 @@ class DeformableUnetR(UnetR):
                     n_dim=self.configs["n_dim"],
                     n_heads=self.configs["n_heads"],
                     n_groups=self.configs["n_groups"],
+                    use_dynamic_positional_encoding=self.configs[
+                        "use_dynamic_positional_encoding"
+                    ],
                 )
                 for _ in range(self.configs["n_encoder_blocks"])
             ]
@@ -40,6 +43,9 @@ class DeformableUnetR(UnetR):
             n_channel=self.n_channel,
             n_patch=self.configs["n_patch"],
             n_dim=self.configs["n_dim"],
+            use_static_positional_encoding=self.configs[
+                "use_static_positional_encoding"
+            ],
         )
 
     def forward(self, x):

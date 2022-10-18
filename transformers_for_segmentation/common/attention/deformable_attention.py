@@ -14,6 +14,7 @@ class DeformableAttention(BaseAttention):
         n_dim: int,
         n_heads: int,
         n_groups: int,
+        use_dynamic_positional_encoding: str,
         offset_kernel_size: int = 5,
         offset_scale_factor: int = 4,
     ):
@@ -24,6 +25,7 @@ class DeformableAttention(BaseAttention):
         self.n_dim = n_dim
         self.n_heads = n_heads
         self.n_groups = n_groups
+        self.use_dynamic_positional_encoding = use_dynamic_positional_encoding
         self.offset_kernel_size = offset_kernel_size
         self.offset_scale_factor = offset_scale_factor
         self.scaling_factor = n_dim ** (-0.5)
@@ -81,7 +83,8 @@ class DeformableAttention(BaseAttention):
 
         deformed_points = self.get_offset(grouped_query=grouped_query)
         x_sampled = self.sample_from_offset(x=x, deformed_points=deformed_points)
-        x_sampled += self.position_bias
+        if self.use_dynamic_positional_encoding:
+            x_sampled += self.position_bias
 
         key = self.to_key(x_sampled)
         value = self.to_value(x_sampled)
