@@ -14,6 +14,10 @@ class BasePatchEmbedder(nn.Module):
         use_cnn_embedding: bool,
         is_3d_data: bool,
     ):
+        """
+        Base patch embedder.
+        (TO DO) This class should be modified to act as a parent class.
+        """
         super().__init__()
         self.image_size = image_size
         self.n_channel = n_channel
@@ -38,6 +42,9 @@ class BasePatchEmbedder(nn.Module):
         self.position_embedding = self.define_position_embedding()
 
     def define_ffn_projection(self) -> nn.Linear:
+        """
+        Define linear projection layers for patch embedding.
+        """
         input_dim = None
         if self.is_3d_data:
             input_dim = self.n_patch ** 3
@@ -46,6 +53,9 @@ class BasePatchEmbedder(nn.Module):
         return nn.Linear(input_dim, self.n_dim)
 
     def define_position_embedding(self) -> torch.Tensor:
+        """
+        Add positional encoding.
+        """
         if self.is_3d_data:
             input_dim = (self.image_size // self.n_patch) ** 3
         else:
@@ -63,6 +73,9 @@ class BasePatchEmbedder(nn.Module):
         return embs
 
     def ffn_patch_projection(self, x):
+        """
+        Embed patches using pre-defiend feed forward layers
+        """
         patches = slice_image_to_patches(
             images=x, patch_size=self.n_patch, flatten=True, is_3d_data=self.is_3d_data
         )
@@ -70,6 +83,9 @@ class BasePatchEmbedder(nn.Module):
         return embs
 
     def cnn_patch_projection(self, x):
+        """
+        Embed patches using pre-defiend convolution layers
+        """
         embs = self.projection(x)
         embs = embs.flatten(start_dim=2)
         embs = embs.transpose(-1, -2)

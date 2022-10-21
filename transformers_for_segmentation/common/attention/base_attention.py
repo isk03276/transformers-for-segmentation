@@ -4,6 +4,10 @@ import torch.nn as nn
 
 
 class BaseAttention(nn.Module):
+    """
+    Base attention class.
+    """
+
     def __init__(self):
         super().__init__()
 

@@ -7,6 +7,10 @@ from transformers_for_segmentation.common.attention.deformable_attention import 
 
 
 class PatchWiseDeformableAttention(DeformableAttention):
+    """
+    Multi-head patch-wise deformable attention.
+    """
+
     def __init__(
         self,
         n_dim: int,

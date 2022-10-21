@@ -2,6 +2,10 @@ import torch.nn as nn
 
 
 class MLPBlock(nn.Module):
+    """
+    MLP block class in transformer encoder.
+    """
+
     def __init__(self, n_dim: int):
         super().__init__()
         self.linear1 = nn.Linear(n_dim, n_dim)

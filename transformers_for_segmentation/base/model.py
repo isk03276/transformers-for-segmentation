@@ -14,6 +14,9 @@ class BaseModel(nn.Module):
         n_classes: int,
         model_config_file_path: str,
     ):
+        """
+        Base model class.
+        """
         super().__init__()
         self.image_size = image_size
         self.n_channel = n_channel
@@ -27,4 +30,8 @@ class BaseModel(nn.Module):
 
     @abstractmethod
     def define_encoder(self):
+        """
+        Define encoders.
+        Please add encoder blocks to the 'self.encoders'
+        """
         pass

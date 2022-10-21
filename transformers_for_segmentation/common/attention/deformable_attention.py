@@ -9,6 +9,10 @@ from transformers_for_segmentation.common.attention.base_attention import BaseAt
 
 
 class DeformableAttention(BaseAttention):
+    """
+    Multi-head deforable attention class.
+    """
+
     def __init__(
         self,
         n_dim: int,

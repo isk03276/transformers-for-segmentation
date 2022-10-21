@@ -7,6 +7,10 @@ from utils.evaluate import pred_to_image, get_dice
 
 
 class ModelInterface:
+    """
+    Class for managing model training/testing.
+    """
+
     def __init__(self, model: BaseModel, n_classes: int, lr: float = 3e-4):
         self.model = model
         self.n_classes = n_classes
@@ -14,15 +18,25 @@ class ModelInterface:
         self.optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     def define_loss_func(self):
+        """
+        Define loss function.
+        Assume multi-class classification
+        """
         return nn.CrossEntropyLoss()
 
     def estimate_loss(self, preds: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """
+        Estimate loss.
+        """
         loss = self.loss_func(preds, labels)
         return loss
 
     def step(
         self, images: torch.Tensor, labels: torch.Tensor, is_train: bool = True,
     ) -> dict:
+        """
+        Do model inference.
+        """
         if is_train:
             self.model.train()
         else:
