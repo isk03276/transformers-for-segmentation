@@ -7,13 +7,18 @@ from utils.torch import tensor_to_array
 
 
 def pred_to_image(pred: torch.Tensor, class_dim: int) -> torch.Tensor:
+    """
+    Convert class scores to the image using argmax.
+    """
     return pred.argmax(dim=class_dim).cpu().detach()
 
 
 def get_dice(
     pred: Union[np.ndarray, torch.Tensor], label, n_classes: int, epsilon: float = 1e-3
-):
-    """Get dice score. This method has to be validated"""
+) -> float:
+    """
+    Get mean dice score.
+    """
     if isinstance(pred, torch.Tensor):
         pred = tensor_to_array(pred).flatten()
     if isinstance(label, torch.Tensor):

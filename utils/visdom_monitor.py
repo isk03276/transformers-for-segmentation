@@ -5,12 +5,19 @@ from utils.image import label_to_rgb
 
 
 class VisdomMonitor:
+    """
+    Visdom util class for visualizing images under training/testing in real-time.
+    """
+
     def __init__(self):
         self.visdom = viz()
 
     def add_train_images(
         self, input_batches: torch.Tensor, label_batches: torch.Tensor
     ):
+        """
+        Add training images to the visdom server.
+        """
         self.add_batched_input_images(
             image_batches=input_batches, caption="Input Image"
         )
@@ -21,6 +28,9 @@ class VisdomMonitor:
     def add_batched_input_images(
         self, image_batches: torch.Tensor, caption: str = None
     ):
+        """
+        Add batched images.
+        """
         images = image_batches.squeeze(1).flatten(
             start_dim=0, end_dim=1
         )  # flatten batches
@@ -30,6 +40,9 @@ class VisdomMonitor:
     def add_batched_label_images(
         self, label_batches: torch.Tensor, caption: str = None
     ):
+        """
+        Add label image to the visdom server.
+        """
         rgb_labels = label_to_rgb(label_batches)
         images = rgb_labels.squeeze(1).flatten(
             start_dim=0, end_dim=1
@@ -37,5 +50,8 @@ class VisdomMonitor:
         self.visdom.images(tensor=images, opts=dict(caption=caption))
 
     def close(self):
+        """
+        Close visdom.
+        """
         self.visdom.close()
         self.server.terminate()

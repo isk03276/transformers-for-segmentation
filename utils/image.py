@@ -8,10 +8,6 @@ from skimage import color
 from utils.torch import tensor_to_array
 
 
-def pad_image(image: Union[np.ndarray, torch.Tensor]):
-    pass
-
-
 def slice_image_to_patches(
     images: torch.Tensor,
     patch_size: int,
@@ -73,36 +69,10 @@ def load_from_nii(
     return image
 
 
-def channel_padding(image: np.ndarray, n_channel_to_pad: int, channel_axis: int = 0):
-    image_shape = list(image.shape)
-    image_shape[channel_axis] = n_channel_to_pad
-    pad = np.zeros(image_shape)
-    return np.concatenate((image, pad), axis=channel_axis)
-
-
-def remove_masked_region(
-    images: Union[np.ndarray, torch.Tensor], masks: Union[np.ndarray, torch.Tensor]
-) -> np.ndarray:
-    if isinstance(images, torch.Tensor):
-        images = tensor_to_array(images)
-    if isinstance(masks, torch.Tensor):
-        masks = tensor_to_array(masks)
-    return images[masks.astype(bool)]
-
-
-def remove_padded_channels(
-    images: Union[np.ndarray, torch.Tensor], depths: torch.Tensor
-) -> np.ndarray:
-    if isinstance(images, torch.Tensor):
-        images = tensor_to_array(images)
-    image_list = []
-    for depth, image in zip(depths, images):
-        image_list.append(image[:depth, :])
-    result = np.array(image_list)
-    return result
-
-
 def label_to_rgb(image: torch.Tensor, bg_label: int = 0) -> torch.Tensor:
+    """
+    Convert label image to the rgb image for visualization.
+    """
     image = tensor_to_array(image)
     image = color.label2rgb(image, bg_label=bg_label)
     image = torch.Tensor(image)
