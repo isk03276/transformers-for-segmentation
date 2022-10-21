@@ -124,7 +124,9 @@ def run(args):
 
     # Init Logger
     if not args.test:
-        model_save_dir = "{}/{}/".format(args.save_dir, get_current_time())
+        model_save_dir = "{}/{}/{}/".format(
+            args.save_dir, args.dataset_name, get_current_time()
+        )
         logger = TensorboardLogger(model_save_dir)
         save_yaml(vars(args), model_save_dir + "config.yaml")
         save_yaml(model.configs, model_save_dir + "model_config.yaml")
