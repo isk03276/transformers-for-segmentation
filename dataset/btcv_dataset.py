@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union
 
 import numpy as np
 import torch
@@ -7,6 +7,11 @@ from utils.image import load_from_nii
 
 
 class BTCVDataset(BaseDataset):
+    """
+    BTCV dataset class.
+    See https://www.synapse.org/#!Synapse:syn3193805/wiki/217789.
+    """
+
     def __init__(self, root: str, transform, image_size: int = 96):
         super().__init__(root=root, transform=transform, image_size=image_size)
 
@@ -23,6 +28,9 @@ class BTCVDataset(BaseDataset):
         return label
 
     def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
+        """
+        Convert numpy array images to torch tensor and clamp tensor.
+        """
         image = torch.Tensor(image)
         if not is_label:
             image = torch.clamp(image, min=-175, max=275)
