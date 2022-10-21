@@ -15,7 +15,7 @@ class DeformableUnetR(UnetR):
         n_channel: int,
         n_seq: int,
         n_classes: int,
-        model_config_file_path: str,
+        model_config_file_path: str = "configs/deformable_unetr/default.yaml",
     ):
         super().__init__(
             image_size=image_size,
@@ -24,7 +24,18 @@ class DeformableUnetR(UnetR):
             n_classes=n_classes,
             model_config_file_path=model_config_file_path,
         )
-        self.encoders = nn.ModuleList()
+
+        self.patch_embedder = PatchEmbedder(
+            image_size=self.image_size,
+            n_channel=self.n_channel,
+            n_patch=self.configs["n_patch"],
+            n_dim=self.configs["n_dim"],
+            use_static_positional_encoding=self.configs[
+                "use_static_positional_encoding"
+            ],
+        )
+
+    def define_encoder(self):
         self.encoders.extend(
             [
                 DeformableAttention(
@@ -37,15 +48,6 @@ class DeformableUnetR(UnetR):
                 )
                 for _ in range(self.configs["n_encoder_blocks"])
             ]
-        )
-        self.patch_embedder = PatchEmbedder(
-            image_size=self.image_size,
-            n_channel=self.n_channel,
-            n_patch=self.configs["n_patch"],
-            n_dim=self.configs["n_dim"],
-            use_static_positional_encoding=self.configs[
-                "use_static_positional_encoding"
-            ],
         )
 
     def forward(self, x):

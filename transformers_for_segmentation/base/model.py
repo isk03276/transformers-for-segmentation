@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import torch.nn as nn
 
 from utils.config import load_from_yaml
@@ -18,3 +20,11 @@ class BaseModel(nn.Module):
         self.n_seq = n_seq
         self.n_classes = n_classes
         self.configs = load_from_yaml(model_config_file_path)
+
+        self.encoders = nn.ModuleList()
+
+        self.define_encoder()
+
+    @abstractmethod
+    def define_encoder(self):
+        pass

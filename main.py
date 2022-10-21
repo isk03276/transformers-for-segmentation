@@ -103,13 +103,15 @@ def run(args):
         args.heads_num = config["heads_num"]
         args.classes_num = config["classes_num"]
 
-    model = model_cls(
+    model_args = dict(
         image_size=image_size,
         n_channel=n_channel,
         n_seq=n_seq,
         n_classes=args.num_classes,
-        model_config_file_path=args.model_config_file,
-    ).to(device)
+    )
+    if args.model_config_file:
+        model_args["model_config_file_path"] = args.model_config_file
+    model = model_cls(**model_args).to(device)
 
     if args.load_from is not None:
         load_model(model, args.load_from)
@@ -193,10 +195,7 @@ if __name__ == "__main__":
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
     parser.add_argument(
-        "--model-config-file",
-        type=str,
-        default="configs/unetr/default_unetr.yaml",
-        help="Model name",
+        "--model-config-file", type=str, help="Model config file path",
     )
     # train / test
     parser.add_argument("--epoch", type=int, default=800, help="Learning epoch")

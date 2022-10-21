@@ -19,7 +19,7 @@ class UnetR(BaseModel):
         n_channel: int,
         n_seq: int,
         n_classes: int,
-        model_config_file_path: str,
+        model_config_file_path: str = "configs/unetr/default.yaml",
     ):
         super().__init__(
             image_size=image_size,
@@ -37,16 +37,6 @@ class UnetR(BaseModel):
             n_patch=self.configs["n_patch"],
             n_dim=self.configs["n_dim"],
             use_cnn_embedding=self.configs["use_cnn_embedding"],
-        )
-
-        self.encoders = nn.ModuleList()
-        self.encoders.extend(
-            [
-                EncoderBlock(
-                    n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"]
-                )
-                for _ in range(self.configs["n_encoder_blocks"])
-            ]
         )
 
         self.decoder_0 = nn.Sequential(
@@ -99,6 +89,16 @@ class UnetR(BaseModel):
 
         self.decoder_12 = Deconv3DLayer(
             in_channels=self.configs["n_dim"], out_channels=512, kernel_size=2
+        )
+
+    def define_encoder(self):
+        self.encoders.extend(
+            [
+                EncoderBlock(
+                    n_dim=self.configs["n_dim"], n_heads=self.configs["n_heads"]
+                )
+                for _ in range(self.configs["n_encoder_blocks"])
+            ]
         )
 
     def forward(self, x):

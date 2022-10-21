@@ -1,0 +1,8 @@
+n_patch: 16
+n_dim: 768
+n_encoder_blocks: 12
+n_heads: 8
+use_cnn_embedding: True
+n_groups: 4
+use_static_positional_encoding: True
+use_dynamic_positional_encoding: True
