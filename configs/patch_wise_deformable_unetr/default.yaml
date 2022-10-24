@@ -5,4 +5,4 @@ n_heads: 8
 use_cnn_embedding: True
 n_groups: 4
 use_static_positional_encoding: True
-use_dynamic_positional_encoding: True
+use_dynamic_positional_encoding: False
