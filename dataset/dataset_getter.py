@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 from dataset.btcv_dataset import BTCVDataset
+from dataset.occluded_btcv_dataset import OccludedBTCVDataset
 
 
 class DatasetGetter:
@@ -13,6 +14,8 @@ class DatasetGetter:
     def get_dataset_cls(dataset_name: str):
         if dataset_name == "btcv":
             return BTCVDataset
+        elif dataset_name == "occluded_btcv":
+            return OccludedBTCVDataset
         else:
             raise NotImplementedError
 

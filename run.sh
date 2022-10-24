@@ -1,14 +1,8 @@
-# unetr
-#python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 800 --save-interval 50 --model-name unetr --model-config-file configs/unetr/default_unetr.yaml
-
 #deformable unetr - pw
-#python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 500 --save-interval 50 --model-name deformable_unetr --model-config-file configs/deformable_unetr/default_deformable_unetr_pw.yaml
+python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 300 --save-interval 100 --model-name patch_wise_deformable_unetr --model-config-file configs/patch_wise_deformable_unetr/default.yaml --num-classes 14 --dataset-name occluded_btcv --load-from checkpoints/btcv/patch_wise_deformable_unetr/epoch_400
+
+# unetr
+python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 300 --save-interval 100 --model-name unetr --model-config-file configs/unetr/default.yaml --num-classes 14 --dataset-name occluded_btcv --load-from checkpoints/btcv/unetr/epoch_400
 
 #deformable unetr - no pw
-python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 800 --save-interval 50 --model-name deformable_unetr --model-config-file configs/deformable_unetr/default_deformable_unetr.yaml
-
-#deformable unetr - no static positional encoding
-#python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 800 --save-interval 50 --model-name deformable_unetr --model-config-file configs/deformable_unetr/default_deformable_unetr_no_static_positional_encoding.yaml
-
-#deformable unetr - no dynamic positional encoding
-python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 800 --save-interval 50 --model-name deformable_unetr --model-config-file configs/deformable_unetr/default_deformable_unetr_no_dynamic_positional_encoding.yaml
+python main.py --batch-size 2 --validation-set-ratio 0.1 --epoch 300 --save-interval 100 --model-name deformable_unetr --model-config-file configs/deformable_unetr/default.yaml --num-classes 14 --dataset-name occluded_btcv --load-from checkpoints/btcv/deformable_unetr/epoch_400
