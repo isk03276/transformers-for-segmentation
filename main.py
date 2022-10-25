@@ -4,7 +4,6 @@ import datetime
 
 import numpy as np
 import torch
-from torch.utils.data import random_split
 
 from dataset.dataset_getter import DatasetGetter
 from utils.torch import get_device, save_model, load_model
@@ -24,26 +23,6 @@ def get_current_time() -> str:
     NOWTIMES = datetime.datetime.now()
     curr_time = NOWTIMES.strftime("%y%m%d_%H%M%S")
     return curr_time
-
-
-def get_dataset(args):
-    dataset = DatasetGetter.get_dataset(
-        dataset_name=args.dataset_name, path=args.dataset_path, transform=None,
-    )
-    if args.test or args.validation_set_ratio == 0.0:
-        main_dataset = dataset
-        validation_dataset = None
-    elif args.validation_set_ratio > 0.0 and args.validation_set_ratio < 1.0:
-        n_data = len(dataset)
-        n_validation_data = int(n_data * args.validation_set_ratio)
-        n_train_data = n_data - n_validation_data
-        main_dataset, validation_dataset = random_split(
-            dataset=dataset, lengths=[n_train_data, n_validation_data]
-        )
-    else:
-        raise Exception
-    return main_dataset, validation_dataset
-
 
 def run_one_epoch(
     dataset_loader, model_interface, device, is_train, visdom_monitor=None
@@ -71,23 +50,17 @@ def run(args):
     device = get_device(args.device)
 
     # Getting Dataset
-    main_dataset, validation_dataset = get_dataset(args)
-
-    # Getting Dataset Loader
-    main_dataset_loader = DatasetGetter.get_dataset_loader(
-        main_dataset, batch_size=1 if args.test else args.batch_size
+    dataset = DatasetGetter.get_dataset(
+        dataset_name=args.dataset_name, path=args.dataset_path, transform=None,
     )
 
-    validation_dataset_loader = (
-        DatasetGetter.get_dataset_loader(
-            validation_dataset, batch_size=1 if args.test else args.batch_size
-        )
-        if validation_dataset
-        else None
+    # Getting Dataset Loader
+    dataset_loader = DatasetGetter.get_dataset_loader(
+        dataset, batch_size=1 if args.test else args.batch_size
     )
 
     with torch.no_grad():
-        sampled_data = next(iter(main_dataset_loader))[0]
+        sampled_data = next(iter(dataset_loader))[0]
     n_channel, n_seq, image_size = sampled_data.size()[1:4]
 
     # Model Instantiation
@@ -133,27 +106,13 @@ def run(args):
 
     for epoch in range(epoch):
         train_loss_avg, train_dice_avg = run_one_epoch(
-            main_dataset_loader, model_interface, device, not args.test, visdom_monitor
+            dataset_loader, model_interface, device, not args.test, visdom_monitor
         )
         print(
             "[Epoch {}] Loss : {} | Dice : {}".format(
                 epoch, train_loss_avg, train_dice_avg
             )
         )
-        if validation_dataset_loader:
-            validation_loss_avg, validation_dice_avg = run_one_epoch(
-                validation_dataset_loader,
-                model_interface,
-                device,
-                False,
-                visdom_monitor,
-            )
-            # Log
-            logger.log(tag="Validation/Loss", value=validation_loss_avg, step=epoch + 1)
-            logger.log(
-                tag="Validation/Dice Score", value=validation_dice_avg, step=epoch + 1
-            )
-
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
@@ -187,12 +146,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--num-classes", type=int, default=14, help="Number of the classes"
-    )
-    parser.add_argument(
-        "--validation-set-ratio",
-        type=float,
-        default=0.1,
-        help="Validation dataset ratio. (this value must  be in [0, 1).)",
     )
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
