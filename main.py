@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import torch
 
-from dataset.dataset_getter import DatasetGetter
+from dataset.dataset_managers import DatasetGetter, KFoldManager
 from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
 from utils.config import save_yaml, load_from_yaml
@@ -24,6 +24,7 @@ def get_current_time() -> str:
     curr_time = NOWTIMES.strftime("%y%m%d_%H%M%S")
     return curr_time
 
+
 def run_one_epoch(
     dataset_loader, model_interface, device, is_train, visdom_monitor=None
 ):
@@ -41,9 +42,9 @@ def run_one_epoch(
             )
         loss_list.append(result_dict["loss"])
         dice_list.append(result_dict["dice"])
-    loss_avg = np.mean(loss_list)
-    dice_avg = np.mean(dice_list)
-    return loss_avg, dice_avg
+    # loss_avg = np.mean(loss_list)
+    # dice_avg = np.mean(dice_list)
+    return loss_list, dice_list
 
 
 def run(args):
@@ -58,6 +59,9 @@ def run(args):
     dataset_loader = DatasetGetter.get_dataset_loader(
         dataset, batch_size=1 if args.test else args.batch_size
     )
+
+    # Cross Validation
+    k_fold_manager = KFoldManager(dataset, args.k_fold) if args.k_fold else None
 
     with torch.no_grad():
         sampled_data = next(iter(dataset_loader))[0]
@@ -105,21 +109,41 @@ def run(args):
         save_yaml(model.configs, model_save_dir + "model_config.yaml")
 
     for epoch in range(epoch):
-        train_loss_avg, train_dice_avg = run_one_epoch(
-            dataset_loader, model_interface, device, not args.test, visdom_monitor
-        )
-        print(
-            "[Epoch {}] Loss : {} | Dice : {}".format(
-                epoch, train_loss_avg, train_dice_avg
+        splits = k_fold_manager.split_dataset()
+        total_train_loss, total_train_dice = [], []
+        total_val_loss, total_val_dice = [], []
+        for (train_idx, val_idx) in splits:
+            k_fold_manager.set_dataset_fold(train_idx)
+            train_loss, train_dice = run_one_epoch(
+                dataset_loader, model_interface, device, not args.test, visdom_monitor
             )
+            k_fold_manager.set_dataset_fold(val_idx)
+            val_loss, val_dice = run_one_epoch(
+                dataset_loader, model_interface, device, False, visdom_monitor
+            )
+            total_train_loss.extend(train_loss)
+            total_train_dice.extend(train_dice)
+            total_val_loss.extend(val_loss)
+            total_val_dice.extend(val_dice)
+        dataset.init_dataset()
+        # Log
+        logger.log(tag="Validation/Loss", value=np.mean(total_val_loss), step=epoch + 1)
+        logger.log(
+            tag="Validation/Dice Score", value=np.mean(total_val_dice), step=epoch + 1
         )
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
             # Log
-            logger.log(tag="Training/Loss", value=train_loss_avg, step=epoch + 1)
-            logger.log(tag="Training/Dice Score", value=train_dice_avg, step=epoch + 1)
+            logger.log(
+                tag="Training/Loss", value=np.mean(total_train_loss), step=epoch + 1
+            )
+            logger.log(
+                tag="Training/Dice Score",
+                value=np.mean(total_train_dice),
+                step=epoch + 1,
+            )
         else:
             break
 
@@ -147,6 +171,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
+    parser.add_argument("--k-fold", type=int, help="K in the k-fold cross validation")
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
     parser.add_argument(
