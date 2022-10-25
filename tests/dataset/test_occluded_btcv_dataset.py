@@ -17,8 +17,9 @@ class TestOccludedBTCVDataset(unittest.TestCase):
     def test_data_load(self):
         dataset = OccludedBTCVDataset(root="data/btcv/", transform=None, image_size=96)
         dataset_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True)
-        
+
         image, label = next(iter(dataset_loader))
+
 
 if __name__ == "__main__":
     unittest.main()

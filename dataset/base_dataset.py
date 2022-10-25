@@ -25,10 +25,20 @@ class BaseDataset(Dataset):
     def __init__(self, root: str, transform: Compose, image_size: int):
         super().__init__()
 
-        self.image_files = sorted(glob.glob(root + "/images/*"))
-        self.label_files = sorted(glob.glob(root + "/labels/*"))
+        self.original_image_files = tuple(sorted(glob.glob(root + "/images/*")))
+        self.original_label_files = tuple(sorted(glob.glob(root + "/labels/*")))
+        self.image_files = None
+        self.label_files = None
+        self.init_dataset()
         self.transform = transform
         self.image_size = image_size
+
+    def init_dataset(self):
+        """
+        Copy original image files to the image files.
+        """
+        self.image_files = list(self.original_image_files)
+        self.label_files = list(self.original_label_files)
 
     @abstractmethod
     def get_image(self, image_file_name: str) -> torch.Tensor:

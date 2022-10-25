@@ -1,6 +1,9 @@
+import numpy as np
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from sklearn.model_selection import KFold
 
+from dataset.base_dataset import BaseDataset
 from dataset.btcv_dataset import BTCVDataset
 from dataset.occluded_btcv_dataset import OccludedBTCVDataset
 
@@ -43,3 +46,17 @@ class DatasetGetter:
             shuffle=shuffle,
             num_workers=num_workers,
         )
+
+
+class KFoldManager:
+    def __init__(self, dataset: BaseDataset, k_fold: int, shuffle: bool = True):
+        self.dataset = dataset
+        self.k_fold = KFold(n_splits=k_fold, shuffle=shuffle)
+
+    def split_dataset(self) -> list:
+        splits = self.k_fold.split(self.dataset)
+        return tuple(splits)
+
+    def set_dataset_fold(self, idx_list: list) -> DataLoader:
+        self.dataset.image_files = np.array(self.dataset.original_image_files)[idx_list]
+        self.dataset.label_files = np.array(self.dataset.original_label_files)[idx_list]

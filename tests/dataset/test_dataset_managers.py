@@ -2,10 +2,10 @@ import sys
 import unittest
 
 try:
-    from dataset.dataset_getter import DatasetGetter
+    from dataset.dataset_managers import DatasetGetter, KFoldManager
 except ModuleNotFoundError:
     sys.path.append(".")
-    from dataset.dataset_getter import DatasetGetter
+    from dataset.dataset_managers import DatasetGetter, KFoldManager
 
 
 class TestDatasetGetter(unittest.TestCase):
