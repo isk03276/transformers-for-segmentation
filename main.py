@@ -48,7 +48,7 @@ def run_one_epoch(
 def train(
     model_interface, k_fold_manager, epoch, dataset_loader, device, visdom_monitor
 ):
-    splits = k_fold_manager.split_dataset()
+    splits = list(k_fold_manager.split_dataset())
     for epoch in range(epoch):
         results = {
             "Train/Loss": [],
