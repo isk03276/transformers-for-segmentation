@@ -49,13 +49,18 @@ class DatasetGetter:
 
 
 class KFoldManager:
-    def __init__(self, dataset: BaseDataset, k_fold: int, shuffle: bool = True):
+    def __init__(self, dataset: BaseDataset, n_splits: int, shuffle: bool = True):
         self.dataset = dataset
-        self.k_fold = KFold(n_splits=k_fold, shuffle=shuffle)
+        self.k_fold = (
+            KFold(n_splits=n_splits, shuffle=shuffle) if n_splits > 1 else None
+        )
 
     def split_dataset(self) -> list:
-        splits = self.k_fold.split(self.dataset)
-        return tuple(splits)
+        if self.k_fold:
+            splits = self.k_fold.split(self.dataset)
+        else:
+            splits = [[list(range(len(self.dataset))), ()]]
+        return splits
 
     def set_dataset_fold(self, idx_list: list) -> DataLoader:
         self.dataset.image_files = np.array(self.dataset.original_image_files)[idx_list]

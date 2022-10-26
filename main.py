@@ -8,7 +8,7 @@ import torch
 from dataset.dataset_managers import DatasetGetter, KFoldManager
 from utils.torch import get_device, save_model, load_model
 from utils.log import TensorboardLogger
-from utils.config import save_yaml, load_from_yaml
+from utils.config import save_yaml
 from utils.visdom_monitor import VisdomMonitor
 from transformers_for_segmentation.get_model import get_model
 from transformers_for_segmentation.common.model_interface import ModelInterface
@@ -42,9 +42,49 @@ def run_one_epoch(
             )
         loss_list.append(result_dict["loss"])
         dice_list.append(result_dict["dice"])
-    # loss_avg = np.mean(loss_list)
-    # dice_avg = np.mean(dice_list)
     return loss_list, dice_list
+
+
+def train(
+    model_interface, k_fold_manager, epoch, dataset_loader, device, visdom_monitor
+):
+    splits = k_fold_manager.split_dataset()
+    for epoch in range(epoch):
+        results = {
+            "Train/Loss": [],
+            "Train/Dice": [],
+            "Validation/Loss": [],
+            "Validation/Dice": [],
+        }
+        for (train_idx, val_idx) in splits:
+            print(train_idx)
+            print(val_idx)
+            k_fold_manager.set_dataset_fold(train_idx)
+            train_loss, train_dice = run_one_epoch(
+                dataset_loader, model_interface, device, True, visdom_monitor
+            )
+            results["Train/Loss"].append(train_loss)
+            results["Train/Dice"].append(train_dice)
+            k_fold_manager.set_dataset_fold(val_idx)
+            val_loss, val_dice = run_one_epoch(
+                dataset_loader, model_interface, device, False, visdom_monitor
+            )
+            results["Validation/Loss"].append(val_loss)
+            results["Validation/Dice"].append(val_dice)
+        yield results
+
+
+def test(model_interface, dataset_loader, device, visdom_monitor):
+    results = {
+        "Test/Loss": [],
+        "Test/Dice": [],
+    }
+    test_loss, test_dice = run_one_epoch(
+        dataset_loader, model_interface, device, False, visdom_monitor
+    )
+    results["Test/Loss"].append(test_loss)
+    results["Test/Dice"].append(test_dice)
+    yield results
 
 
 def run(args):
@@ -61,7 +101,7 @@ def run(args):
     )
 
     # Cross Validation
-    k_fold_manager = KFoldManager(dataset, args.k_fold) if args.k_fold else None
+    k_fold_manager = KFoldManager(dataset, args.n_folds) if not args.test else None
 
     with torch.no_grad():
         sampled_data = next(iter(dataset_loader))[0]
@@ -69,17 +109,6 @@ def run(args):
 
     # Model Instantiation
     model_cls = get_model(model_name=args.model_name)
-
-    if args.load_from and args.load_model_config:
-        dir_path = os.path.dirname(args.load_from)
-        config_file_path = dir_path + "/config.yaml"
-        config = load_from_yaml(config_file_path)
-        args.patch_size = config["patch_size"]
-        args.embedding_size = config["embedding_size"]
-        args.encoder_blocks_num = config["encoder_blocks_num"]
-        args.heads_num = config["heads_num"]
-        args.classes_num = config["classes_num"]
-
     model_args = dict(
         image_size=image_size,
         n_channel=n_channel,
@@ -89,17 +118,15 @@ def run(args):
     if args.model_config_file:
         model_args["model_config_file_path"] = args.model_config_file
     model = model_cls(**model_args).to(device)
-
-    if args.load_from is not None:
+    if args.load_from:
         load_model(model, args.load_from)
 
     # Train / Test Iteration
     model_interface = ModelInterface(model=model, n_classes=args.num_classes)
     epoch = 1 if args.test else args.epoch
 
-    visdom_monitor = VisdomMonitor() if args.use_visdom_monitoring else None
-
     # Init Logger
+    visdom_monitor = VisdomMonitor() if args.use_visdom_monitoring else None
     if not args.test:
         model_save_dir = "{}/{}/{}/".format(
             args.save_dir, args.dataset_name, get_current_time()
@@ -108,44 +135,28 @@ def run(args):
         save_yaml(vars(args), model_save_dir + "config.yaml")
         save_yaml(model.configs, model_save_dir + "model_config.yaml")
 
-    for epoch in range(epoch):
-        splits = k_fold_manager.split_dataset()
-        total_train_loss, total_train_dice = [], []
-        total_val_loss, total_val_dice = [], []
-        for (train_idx, val_idx) in splits:
-            k_fold_manager.set_dataset_fold(train_idx)
-            train_loss, train_dice = run_one_epoch(
-                dataset_loader, model_interface, device, not args.test, visdom_monitor
-            )
-            k_fold_manager.set_dataset_fold(val_idx)
-            val_loss, val_dice = run_one_epoch(
-                dataset_loader, model_interface, device, False, visdom_monitor
-            )
-            total_train_loss.extend(train_loss)
-            total_train_dice.extend(train_dice)
-            total_val_loss.extend(val_loss)
-            total_val_dice.extend(val_dice)
-        dataset.init_dataset()
-        # Log
-        logger.log(tag="Validation/Loss", value=np.mean(total_val_loss), step=epoch + 1)
-        logger.log(
-            tag="Validation/Dice Score", value=np.mean(total_val_dice), step=epoch + 1
+    results = (
+        test(model_interface, dataset_loader, device, visdom_monitor)
+        if args.test
+        else train(
+            model_interface,
+            k_fold_manager,
+            epoch,
+            dataset_loader,
+            device,
+            visdom_monitor,
         )
+    )
+    for epoch, result in enumerate(results):
+        for key, value in result.items():
+            if not args.test:
+                logger.log(tag=key, value=np.mean(value), step=epoch + 1)
+            else:
+                print("[{}] : {}".format(key, np.mean(value)))
         if not args.test:
             # Save model
             if (epoch + 1) % args.save_interval == 0:
                 save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
-            # Log
-            logger.log(
-                tag="Training/Loss", value=np.mean(total_train_loss), step=epoch + 1
-            )
-            logger.log(
-                tag="Training/Dice Score",
-                value=np.mean(total_train_dice),
-                step=epoch + 1,
-            )
-        else:
-            break
 
     if not args.test:
         logger.close()
@@ -171,7 +182,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes", type=int, default=14, help="Number of the classes"
     )
-    parser.add_argument("--k-fold", type=int, help="K in the k-fold cross validation")
+    parser.add_argument(
+        "--n-folds",
+        type=int,
+        default=0,
+        help="Nuber of the folds in the k-fold cross validation(If this value is less than 1, do not cross-validation.",
+    )
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")
     parser.add_argument(
