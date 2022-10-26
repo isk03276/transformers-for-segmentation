@@ -51,37 +51,37 @@ def train(
     splits = list(k_fold_manager.split_dataset())
     for epoch in range(epoch):
         results = {
-            "Train/Loss": [],
-            "Train/Dice": [],
+            "Training/Loss": [],
+            "Training/Dice Score": [],
             "Validation/Loss": [],
-            "Validation/Dice": [],
+            "Validation/Dice Score": [],
         }
         for (train_idx, val_idx) in splits:
             k_fold_manager.set_dataset_fold(train_idx)
             train_loss, train_dice = run_one_epoch(
                 dataset_loader, model_interface, device, True, visdom_monitor
             )
-            results["Train/Loss"].append(train_loss)
-            results["Train/Dice"].append(train_dice)
+            results["Training/Loss"].extend(train_loss)
+            results["Training/Dice Score"].extend(train_dice)
             k_fold_manager.set_dataset_fold(val_idx)
             val_loss, val_dice = run_one_epoch(
                 dataset_loader, model_interface, device, False, visdom_monitor
             )
-            results["Validation/Loss"].append(val_loss)
-            results["Validation/Dice"].append(val_dice)
+            results["Validation/Loss"].extend(val_loss)
+            results["Validation/Dice Score"].extend(val_dice)
         yield results
 
 
 def test(model_interface, dataset_loader, device, visdom_monitor):
     results = {
         "Test/Loss": [],
-        "Test/Dice": [],
+        "Test/Dice Score": [],
     }
     test_loss, test_dice = run_one_epoch(
         dataset_loader, model_interface, device, False, visdom_monitor
     )
-    results["Test/Loss"].append(test_loss)
-    results["Test/Dice"].append(test_dice)
+    results["Test/Loss"].extend(test_loss)
+    results["Test/Dice Score"].extend(test_dice)
     yield results
 
 
@@ -147,14 +147,13 @@ def run(args):
     )
     for epoch, result in enumerate(results):
         for key, value in result.items():
-            if not args.test:
-                logger.log(tag=key, value=np.mean(value), step=epoch + 1)
-            else:
+            if args.test:
                 print("[{}] : {}".format(key, np.mean(value)))
-        if not args.test:
-            # Save model
-            if (epoch + 1) % args.save_interval == 0:
-                save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
+            else:
+                logger.log(tag=key, value=np.mean(value), step=epoch + 1)
+                # Save model
+                if (epoch + 1) % args.save_interval == 0:
+                    save_model(model, model_save_dir, "epoch_{}".format(epoch + 1))
 
     if not args.test:
         logger.close()
