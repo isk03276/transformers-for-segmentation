@@ -57,8 +57,6 @@ def train(
             "Validation/Dice": [],
         }
         for (train_idx, val_idx) in splits:
-            print(train_idx)
-            print(val_idx)
             k_fold_manager.set_dataset_fold(train_idx)
             train_loss, train_dice = run_one_epoch(
                 dataset_loader, model_interface, device, True, visdom_monitor
@@ -207,7 +205,7 @@ if __name__ == "__main__":
         "--save-dir", type=str, default="checkpoints/", help="Dataset name (ex. cifar10"
     )
     parser.add_argument(
-        "--save-interval", type=int, default=5, help="Model save interval"
+        "--save-interval", type=int, default=50, help="Model save interval"
     )
     parser.add_argument("--load-from", type=str, help="Path to load the model")
     parser.add_argument(
