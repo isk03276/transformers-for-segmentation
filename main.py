@@ -63,8 +63,8 @@ def train(
             train_loss, train_dice = run_one_epoch(
                 dataset_loader, model_interface, device, True, visdom_monitor
             )
-            results["Training/Loss"].extend(train_loss)
-            results["Training/Dice Score"].extend(train_dice)
+            results["Train/Loss"].extend(train_loss)
+            results["Train/Dice Score"].extend(train_dice)
             # Validation
             k_fold_manager.set_dataset_fold(val_idx)
             val_loss, val_dice = run_one_epoch(
