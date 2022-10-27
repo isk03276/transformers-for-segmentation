@@ -14,8 +14,15 @@ class OccludedBTCVDataset(BTCVDataset):
     This dataset covers 3 of 14 classes('8':aorta, '9':inferior vena cava) in the BTCV dataset.
     """
 
-    def __init__(self, root: str, transform, image_size: int = 96):
-        super().__init__(root=root, transform=transform, image_size=image_size)
+    def __init__(
+        self, root: str, transform, image_size: int = 96, testset_ratio: float = None
+    ):
+        super().__init__(
+            root=root,
+            transform=transform,
+            image_size=image_size,
+            testset_ratio=testset_ratio,
+        )
         self.index_occlusion_starting = 40
         self.occlusion_ratio = 0.4
         self.occlusion_location = 0.5

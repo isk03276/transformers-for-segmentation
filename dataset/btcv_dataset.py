@@ -12,8 +12,15 @@ class BTCVDataset(BaseDataset):
     See https://www.synapse.org/#!Synapse:syn3193805/wiki/217789.
     """
 
-    def __init__(self, root: str, transform, image_size: int = 96):
-        super().__init__(root=root, transform=transform, image_size=image_size)
+    def __init__(
+        self, root: str, transform, image_size: int = 96, testset_ratio: float = None
+    ):
+        super().__init__(
+            root=root,
+            transform=transform,
+            image_size=image_size,
+            testset_ratio=testset_ratio,
+        )
 
     def get_image(self, image_file_name: str):
         image = load_from_nii(image_file_name, image_size=self.image_size)

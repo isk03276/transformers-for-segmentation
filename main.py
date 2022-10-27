@@ -1,4 +1,3 @@
-import os
 import argparse
 import datetime
 
@@ -51,24 +50,35 @@ def train(
     splits = list(k_fold_manager.split_dataset())
     for epoch in range(epoch):
         results = {
-            "Training/Loss": [],
-            "Training/Dice Score": [],
+            "Train/Loss": [],
+            "Train/Dice Score": [],
             "Validation/Loss": [],
             "Validation/Dice Score": [],
+            "Test/Loss": [],
+            "Test/Dice Score": [],
         }
         for (train_idx, val_idx) in splits:
+            # Train
             k_fold_manager.set_dataset_fold(train_idx)
             train_loss, train_dice = run_one_epoch(
                 dataset_loader, model_interface, device, True, visdom_monitor
             )
             results["Training/Loss"].extend(train_loss)
             results["Training/Dice Score"].extend(train_dice)
+            # Validation
             k_fold_manager.set_dataset_fold(val_idx)
             val_loss, val_dice = run_one_epoch(
                 dataset_loader, model_interface, device, False, visdom_monitor
             )
             results["Validation/Loss"].extend(val_loss)
             results["Validation/Dice Score"].extend(val_dice)
+        # Test
+        dataset_loader.dataset.set_test_mode()
+        test_loss, test_dice = run_one_epoch(
+            dataset_loader, model_interface, device, True, visdom_monitor
+        )
+        results["Test/Loss"].extend(test_loss)
+        results["Test/Dice Score"].extend(test_dice)
         yield results
 
 
@@ -90,7 +100,10 @@ def run(args):
 
     # Getting Dataset
     dataset = DatasetGetter.get_dataset(
-        dataset_name=args.dataset_name, path=args.dataset_path, transform=None,
+        dataset_name=args.dataset_name,
+        path=args.dataset_path,
+        transform=None,
+        testset_ratio=args.testset_ratio if not args.test else None,
     )
 
     # Getting Dataset Loader
@@ -184,6 +197,12 @@ if __name__ == "__main__":
         type=int,
         default=0,
         help="Nuber of the folds in the k-fold cross validation(If this value is less than 1, do not cross-validation.",
+    )
+    parser.add_argument(
+        "--testset-ratio",
+        type=float,
+        default=0.2,
+        help="Ratio of data to use for testing.",
     )
     # model
     parser.add_argument("--model-name", type=str, default="unetr", help="Model name")

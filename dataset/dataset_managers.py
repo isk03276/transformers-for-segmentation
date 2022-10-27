@@ -24,13 +24,18 @@ class DatasetGetter:
 
     @staticmethod
     def get_dataset(
-        dataset_name: str = "btcv", path: str = "data/", transform=None,
+        dataset_name: str = "btcv",
+        path: str = "data/",
+        transform=None,
+        testset_ratio: float = None,
     ) -> Dataset:
         """
         Get dataset class with the dataset name as input.
         """
         dataset_cls = DatasetGetter.get_dataset_cls(dataset_name=dataset_name)
-        dataset = dataset_cls(root=path, transform=transform)
+        dataset = dataset_cls(
+            root=path, transform=transform, testset_ratio=testset_ratio
+        )
         return dataset
 
     @staticmethod
@@ -63,5 +68,5 @@ class KFoldManager:
         return splits
 
     def set_dataset_fold(self, idx_list: list) -> DataLoader:
-        self.dataset.image_files = np.array(self.dataset.original_image_files)[idx_list]
-        self.dataset.label_files = np.array(self.dataset.original_label_files)[idx_list]
+        self.dataset.image_files = np.array(self.dataset.all_image_files)[idx_list]
+        self.dataset.label_files = np.array(self.dataset.all_label_files)[idx_list]

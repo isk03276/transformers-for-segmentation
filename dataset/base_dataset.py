@@ -22,23 +22,53 @@ class BaseDataset(Dataset):
         image_size (int): image size (assume height == width == depth)
     """
 
-    def __init__(self, root: str, transform: Compose, image_size: int):
+    def __init__(
+        self,
+        root: str,
+        transform: Compose,
+        image_size: int,
+        testset_ratio: float = None,
+    ):
         super().__init__()
 
-        self.original_image_files = tuple(sorted(glob.glob(root + "/images/*")))
-        self.original_label_files = tuple(sorted(glob.glob(root + "/labels/*")))
-        self.image_files = None
-        self.label_files = None
-        self.init_dataset()
         self.transform = transform
         self.image_size = image_size
+        self.testset_ratio = testset_ratio
+
+        self.all_image_files = tuple(sorted(glob.glob(root + "/images/*")))
+        self.all_label_files = tuple(sorted(glob.glob(root + "/labels/*")))
+        self.image_files = None
+        self.label_files = None
+        self.test_image_files = None
+        self.test_label_files = None
+        if self.testset_ratio:
+            self._split_testset()
+        self.init_dataset()
 
     def init_dataset(self):
         """
         Copy original image files to the image files.
         """
-        self.image_files = list(self.original_image_files)
-        self.label_files = list(self.original_label_files)
+        self.image_files = list(self.all_image_files)
+        self.label_files = list(self.all_label_files)
+
+    def set_test_mode(self):
+        """
+        Copy test image files to the image files.
+        """
+        self.image_files = list(self.test_image_files)
+        self.label_files = list(self.test_label_files)
+
+    def _split_testset(self):
+        """
+        Split test dataset.
+        All image files is copied to spliited all image files
+        """
+        n_testset = int(len(self.all_image_files) * self.testset_ratio)
+        self.test_image_files = self.all_image_files[-n_testset:]
+        self.test_label_files = self.all_label_files[-n_testset:]
+        self.all_image_files = tuple(list(self.all_image_files)[:-n_testset])
+        self.all_label_files = tuple(list(self.all_label_files)[:-n_testset])
 
     @abstractmethod
     def get_image(self, image_file_name: str) -> torch.Tensor:
