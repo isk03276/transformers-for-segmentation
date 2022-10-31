@@ -48,38 +48,38 @@ def train(
     model_interface, k_fold_manager, epoch, dataset_loader, device, visdom_monitor
 ):
     splits = list(k_fold_manager.split_dataset())
-    for epoch in range(epoch):
-        results = {
-            "Train/Loss": [],
-            "Train/Dice Score": [],
-            "Validation/Loss": [],
-            "Validation/Dice Score": [],
-            "Test/Loss": [],
-            "Test/Dice Score": [],
-        }
+    for epoch in range(epoch // len(splits)):
         for (train_idx, val_idx) in splits:
+            results = {
+                "Train/Loss": None,
+                "Train/Dice Score": None,
+                "Validation/Loss": None,
+                "Validation/Dice Score": None,
+                "Test/Loss": None,
+                "Test/Dice Score": None,
+            }
             # Train
             k_fold_manager.set_dataset_fold(train_idx)
             train_loss, train_dice = run_one_epoch(
                 dataset_loader, model_interface, device, True, visdom_monitor
             )
-            results["Train/Loss"].extend(train_loss)
-            results["Train/Dice Score"].extend(train_dice)
+            results["Train/Loss"] = train_loss
+            results["Train/Dice Score"] = train_dice
             # Validation
             k_fold_manager.set_dataset_fold(val_idx)
             val_loss, val_dice = run_one_epoch(
                 dataset_loader, model_interface, device, False, visdom_monitor
             )
-            results["Validation/Loss"].extend(val_loss)
-            results["Validation/Dice Score"].extend(val_dice)
-        # Test
-        dataset_loader.dataset.set_test_mode()
-        test_loss, test_dice = run_one_epoch(
-            dataset_loader, model_interface, device, True, visdom_monitor
-        )
-        results["Test/Loss"].extend(test_loss)
-        results["Test/Dice Score"].extend(test_dice)
-        yield results
+            results["Validation/Loss"] = val_loss
+            results["Validation/Dice Score"] = val_dice
+            # Test
+            dataset_loader.dataset.set_test_mode()
+            test_loss, test_dice = run_one_epoch(
+                dataset_loader, model_interface, device, False, visdom_monitor
+            )
+            results["Test/Loss"] = test_loss
+            results["Test/Dice Score"] = test_dice
+            yield results
 
 
 def test(model_interface, dataset_loader, device, visdom_monitor):
