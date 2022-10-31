@@ -122,16 +122,19 @@ def run(args):
     # Model Instantiation
     model_cls = get_model(model_name=args.model_name)
     model_args = dict(
-        image_size=image_size,
-        n_channel=n_channel,
-        n_seq=n_seq,
-        n_classes=n_classes,
+        image_size=image_size, n_channel=n_channel, n_seq=n_seq, n_classes=n_classes,
     )
     if args.model_config_file:
         model_args["model_config_file_path"] = args.model_config_file
     model = model_cls(**model_args).to(device)
     if args.load_from:
-        load_model(model, args.load_from, keywards_to_exclude="decoder_output" if not args.test and args.pretrain else None)
+        load_model(
+            model,
+            args.load_from,
+            keywards_to_exclude=("decoder_output",)
+            if not args.test and args.use_pretrained_model
+            else None,
+        )
 
     # Train / Test Iteration
     model_interface = ModelInterface(model=model, n_classes=n_classes)
@@ -211,7 +214,11 @@ if __name__ == "__main__":
     parser.add_argument("--epoch", type=int, default=800, help="Learning epoch")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
     parser.add_argument("--test", action="store_true", help="Whether to test the model")
-    parser.add_argument("--pretrain", action="store_true", help="Whether to use the pretrained model('load-from' arg must be activated)")
+    parser.add_argument(
+        "--use-pretrained-model",
+        action="store_true",
+        help="Whether to use the pretrained model('load-from' arg must be activated)",
+    )
     parser.add_argument(
         "--use-visdom-monitoring",
         action="store_true",
