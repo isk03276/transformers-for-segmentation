@@ -16,6 +16,9 @@ class ModelInterface:
         self.n_classes = n_classes
         self.loss_func = nn.CrossEntropyLoss()  # self.define_loss_func()
         self.optimizer = optim.AdamW(model.parameters(), lr=lr)
+        self.lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer=self.optimizer, T_max=50, eta_min=1e-4
+        )
 
     def define_loss_func(self):
         """
@@ -54,7 +57,8 @@ class ModelInterface:
         info_dict["preds"] = preds
 
         if is_train:
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            self.optimizer.zero_grad()
+            self.lr_scheduler.step()
         return info_dict
