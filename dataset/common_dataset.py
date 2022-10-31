@@ -10,7 +10,9 @@ class CTDataset(BaseDataset):
     """
     Common CT dataset class.
     """
-    n_classes = -1 # Must be defined
+
+    n_classes = -1  # Must be defined
+
     def __init__(
         self, root: str, transform, image_size: int = 96, testset_ratio: float = None,
     ):

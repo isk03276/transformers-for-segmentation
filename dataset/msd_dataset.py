@@ -6,7 +6,9 @@ class MSDDataset(CTDataset):
     MSD dataset class.
     See http://medicaldecathlon.com/.
     """
+
     n_classes = 2
+
     def __init__(
         self, root: str, transform, image_size: int = 96, testset_ratio: float = None
     ):
