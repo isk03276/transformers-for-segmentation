@@ -14,7 +14,7 @@ class ModelInterface:
     def __init__(self, model: BaseModel, n_classes: int, lr: float = 3e-4):
         self.model = model
         self.n_classes = n_classes
-        self.loss_func = nn.CrossEntropyLoss()  # self.define_loss_func()
+        self.loss_func = self.define_loss_func()
         self.optimizer = optim.AdamW(model.parameters(), lr=lr)
         self.lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer=self.optimizer, T_max=50, eta_min=1e-4

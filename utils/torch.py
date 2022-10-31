@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -35,8 +36,17 @@ def save_model(model: nn.Module, dir_name: str, file_name: str):
     torch.save(model.state_dict(), dir_name + file_name)
 
 
-def load_model(model: nn.Module, path: str):
+def load_model(model: nn.Module, path: str, keywards_to_exclude: Tuple[str] = None):
     """
     Load model.
     """
-    model.load_state_dict(torch.load(path))
+    model_state_dict = torch.load(path)
+    if keywards_to_exclude:
+        keys_to_exclude = []
+        for key in model_state_dict.keys():
+            for keyward_to_exclude in keywards_to_exclude:
+                if keyward_to_exclude in key:
+                    keys_to_exclude.append(key)
+        for key_to_exclude in keys_to_exclude:
+            del model_state_dict[key_to_exclude]
+    model.load_state_dict(model_state_dict, strict=False)
