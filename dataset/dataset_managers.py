@@ -5,6 +5,7 @@ from sklearn.model_selection import KFold
 
 from dataset.base_dataset import BaseDataset
 from dataset.btcv_dataset import BTCVDataset
+from dataset.msd_dataset import MSDDataset
 from dataset.occluded_btcv_dataset import OccludedBTCVDataset
 
 
@@ -19,6 +20,8 @@ class DatasetGetter:
             return BTCVDataset
         elif dataset_name == "occluded_btcv":
             return OccludedBTCVDataset
+        elif dataset_name == "msd":
+            return MSDDataset
         else:
             raise NotImplementedError
 
