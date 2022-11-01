@@ -17,9 +17,9 @@ class MultiHeadSelfAttention(BaseAttention):
         self.n_heads = n_heads
         self.scaling_factor = n_dim ** (-0.5)
 
-        self.to_query = nn.Linear(n_dim, n_dim)
-        self.to_key = nn.Linear(n_dim, n_dim)
-        self.to_value = nn.Linear(n_dim, n_dim)
+        self.to_query = nn.Linear(n_dim, n_dim, bias=False)
+        self.to_key = nn.Linear(n_dim, n_dim, bias=False)
+        self.to_value = nn.Linear(n_dim, n_dim, bias=False)
         self.out = nn.Linear(n_dim, n_dim)
 
         self.softmax = nn.Softmax(dim=1)
