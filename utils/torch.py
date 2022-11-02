@@ -1,5 +1,6 @@
 import os
 from typing import Tuple
+from collections import OrderedDict
 
 import numpy as np
 import torch
@@ -36,17 +37,37 @@ def save_model(model: nn.Module, dir_name: str, file_name: str):
     torch.save(model.state_dict(), dir_name + file_name)
 
 
-def load_model(model: nn.Module, path: str, keywards_to_exclude: Tuple[str] = None):
+def load_model(model: nn.Module, path: str, keywords_to_exclude: Tuple[str] = None):
     """
     Load model.
     """
     model_state_dict = torch.load(path)
-    if keywards_to_exclude:
-        keys_to_exclude = []
-        for key in model_state_dict.keys():
-            for keyward_to_exclude in keywards_to_exclude:
-                if keyward_to_exclude in key:
-                    keys_to_exclude.append(key)
-        for key_to_exclude in keys_to_exclude:
-            del model_state_dict[key_to_exclude]
+    if keywords_to_exclude:
+        params_to_exclude = find_params(model_state_dict, keywords_to_exclude)
+        for param_to_exclude in params_to_exclude:
+            del model_state_dict[param_to_exclude]
     model.load_state_dict(model_state_dict, strict=False)
+
+
+def freeze_parameters(model: nn.Module, keywords_to_freeze: Tuple[str]):
+    """
+    Freeze the specific weights in the model.
+    """
+    if len(keywords_to_freeze) < 1:
+        return
+    model_state_dict = model.state_dict()
+    params_to_freeze = find_params(model_state_dict, keywords_to_freeze)
+    for param in params_to_freeze:
+        model_state_dict[param].requires_grad = False
+
+
+def find_params(model_state_dict: OrderedDict, keywords: Tuple[str]):
+    """
+    Find model parameters as keywords.
+    """
+    params = []
+    for param_name in model_state_dict.keys():
+        for keyword in keywords:
+            if keyword in param_name:
+                params.append(param_name)
+    return params
