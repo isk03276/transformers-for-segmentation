@@ -37,12 +37,8 @@ class CTDataset(BaseDataset):
 
     def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
         """
-        Convert numpy array images to torch tensor and clamp tensor.
+        Dummy method. (Parent method)
         """
-        image = torch.Tensor(image)
-        if not is_label:
-            image = torch.clamp(image, min=-175, max=275)
-            image = (image + 175) / (275 + 175)  # min max normalization
         return image
 
     def __getitem__(self, index: Union[int, torch.Tensor]):

@@ -1,3 +1,5 @@
+import torch
+
 from dataset.common_dataset import CTDataset
 
 
@@ -18,3 +20,13 @@ class BTCVDataset(CTDataset):
             image_size=image_size,
             testset_ratio=testset_ratio,
         )
+    
+    def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
+        """
+        Convert numpy array images to torch tensor and clamp tensor.
+        """
+        image = torch.Tensor(image)
+        if not is_label:
+            image = torch.clamp(image, min=-175, max=275)
+            image = (image + 175) / (275 + 175)  # min max normalization
+        return image
