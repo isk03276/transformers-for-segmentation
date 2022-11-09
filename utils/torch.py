@@ -20,7 +20,7 @@ def get_device(device_name: str) -> torch.device:
     """
     try:
         device = torch.device(device_name)
-    except RuntimeError as e:
+    except RuntimeError:
         print("[Device name error] Use cpu device!")
         device = torch.device("cpu")
     return device

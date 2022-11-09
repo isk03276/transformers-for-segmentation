@@ -7,6 +7,7 @@ from dataset.base_dataset import BaseDataset
 from dataset.btcv_dataset import BTCVDataset
 from dataset.msd_dataset import MSDDataset
 from dataset.occluded_btcv_dataset import OccludedBTCVDataset
+from dataset.adam_dataset import AdamDataset
 
 
 class DatasetGetter:
@@ -22,6 +23,8 @@ class DatasetGetter:
             return OccludedBTCVDataset
         elif dataset_name == "msd":
             return MSDDataset
+        elif dataset_name == "adam":
+            return AdamDataset
         else:
             raise NotImplementedError
 
