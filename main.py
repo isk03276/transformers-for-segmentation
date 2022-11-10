@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 from dataset.dataset_managers import DatasetGetter, KFoldManager
-from utils.torch import get_device, save_model, load_model
+from utils.torch import get_device, save_model, load_model, freeze_parameters
 from utils.log import TensorboardLogger
 from utils.config import save_yaml
 from utils.visdom_monitor import VisdomMonitor
@@ -131,9 +131,13 @@ def run(args):
         load_model(
             model,
             args.load_from,
-            keywards_to_exclude=("decoder_output",)
+            keywords_to_exclude=("decoder_output",)
             if not args.test and args.use_pretrained_model
             else None,
+        )
+    if args.use_pretrained_model:
+        freeze_parameters(
+            model, ("decoder_0", "decoder_3", "decoder_6", "decoder_9", "decoder_12")
         )
 
     # Train / Test Iteration
