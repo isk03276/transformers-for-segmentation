@@ -3,11 +3,10 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from sklearn.model_selection import KFold
 
+from dataset.common_dataset import CTDataset
 from dataset.base_dataset import BaseDataset
-from dataset.btcv_dataset import BTCVDataset
-from dataset.msd_dataset import MSDDataset
-from dataset.occluded_btcv_dataset import OccludedBTCVDataset
-from dataset.adam_dataset import AdamDataset
+from dataset.abdominal.btcv_dataset import BtcvDataset
+from dataset.neuro.adam_dataset import AdamDataset
 
 
 class DatasetGetter:
@@ -18,15 +17,12 @@ class DatasetGetter:
     @staticmethod
     def get_dataset_cls(dataset_name: str):
         if dataset_name == "btcv":
-            return BTCVDataset
-        elif dataset_name == "occluded_btcv":
-            return OccludedBTCVDataset
-        elif dataset_name == "msd":
-            return MSDDataset
+            return BtcvDataset
         elif dataset_name == "adam":
             return AdamDataset
         else:
-            raise NotImplementedError
+            print("Use Common CT dataset!")
+            return CTDataset
 
     @staticmethod
     def get_dataset(

@@ -3,7 +3,7 @@ import torch
 from dataset.common_dataset import CTDataset
 
 
-class BTCVDataset(CTDataset):
+class BtcvDataset(CTDataset):
     """
     BTCV dataset class.
     See https://www.synapse.org/#!Synapse:syn3193805/wiki/217789.
@@ -20,7 +20,7 @@ class BTCVDataset(CTDataset):
             image_size=image_size,
             testset_ratio=testset_ratio,
         )
-    
+
     def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
         """
         Convert numpy array images to torch tensor and clamp tensor.
