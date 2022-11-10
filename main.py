@@ -8,7 +8,7 @@ from dataset.dataset_managers import DatasetGetter, KFoldManager
 from utils.torch import get_device, save_model, load_model, freeze_parameters
 from utils.log import TensorboardLogger
 from utils.config import save_yaml
-from utils.visdom_monitor import VisdomMonitor
+from utils.visualize import VisdomMonitor
 from transformers_for_segmentation.get_model import get_model
 from transformers_for_segmentation.common.model_interface import ModelInterface
 
