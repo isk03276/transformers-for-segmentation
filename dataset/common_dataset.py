@@ -39,7 +39,7 @@ class CTDataset(BaseDataset):
         """
         Convert numpy array images to torch tensor.
         """
-        image = torch.tensor(image)
+        image = torch.Tensor(image)
         return image
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
