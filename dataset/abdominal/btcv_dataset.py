@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 from dataset.common_dataset import CTDataset
@@ -25,7 +26,7 @@ class BtcvDataset(CTDataset):
         """
         Convert numpy array images to torch tensor and clamp tensor.
         """
-        image = torch.Tensor(image)
+        image = super().image_prepocess(image)
         if not is_label:
             image = torch.clamp(image, min=-175, max=275)
             image = (image + 175) / (275 + 175)  # min max normalization

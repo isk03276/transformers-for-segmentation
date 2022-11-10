@@ -37,8 +37,9 @@ class CTDataset(BaseDataset):
 
     def image_prepocess(self, image: np.ndarray, is_label: bool) -> torch.Tensor:
         """
-        Dummy method. (Parent method)
+        Convert numpy array images to torch tensor.
         """
+        image = torch.tensor(image)
         return image
 
     def __getitem__(self, index: Union[int, torch.Tensor]):
