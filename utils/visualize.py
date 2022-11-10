@@ -1,5 +1,9 @@
+from typing import Tuple
+
+import numpy as np
 import torch
 from visdom import Visdom as viz
+import pyvista as pv
 
 from utils.image import label_to_rgb
 
@@ -55,3 +59,9 @@ class VisdomMonitor:
         """
         self.visdom.close()
         self.server.terminate()
+        
+def visulaize_volume(volumes: Tuple[np.ndarray]):
+    plotter = pv.Plotter()
+    for volume in volumes:
+        plotter.add_volume(volume)
+    plotter.show()    
